@@ -1,0 +1,75 @@
+name: Emergency local Supabase integration QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/emergency-local-supabase.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out migration branch under test
+        uses: actions/checkout@v4
+        with:
+          ref: migration/extract-emergency-system
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up pinned Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.116.0
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Initialize local Supabase config
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Rebuild database from incident-response migrations
+        run: supabase db reset
+
+      - name: Serve corrected emergency Edge Function locally
+        run: |
+          supabase functions serve emergency-response --no-verify-jwt > /tmp/emergency-function.log 2>&1 &
+          echo $! > /tmp/emergency-function.pid
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS \
+              -H 'Origin: https://www.masinloc-zambales.com' \
+              http://127.0.0.1:54321/functions/v1/emergency-response || true)
+            if [ "$code" = "204" ]; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/emergency-function.log
+          exit 1
+
+      - name: Run database and Edge Function lifecycle QA
+        run: node scripts/emergency-local-supabase-qa.mjs
+
+      - name: Print function log on failure
+        if: failure()
+        run: cat /tmp/emergency-function.log || true
+
+      - name: Stop isolated Supabase
+        if: always()
+        run: supabase stop --no-backup || true
