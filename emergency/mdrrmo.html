@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#061634">
+<title>MDRRMO Emergency Console | Masinloc Connect</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../tokens.css?v=20260823-1">
+<link rel="stylesheet" href="agency.css?v=20260831-4">
+</head>
+<body class="mdrrmo-page" data-agency="mdrrmo">
+<header class="agency-top">
+  <div class="agency-brand">
+    <button class="rail-toggle" type="button" id="railToggle" aria-expanded="false" aria-controls="consoleRail" aria-label="Show console menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 6.8h16.8M3.6 12h16.8M3.6 17.2h16.8"/></svg></button>
+    <img src="../assets/masinloc-logo.webp" width="320" height="78" alt="Masinloc Zambales">
+    <span class="agency-shield" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 4.6 5.6v6.1c0 4.5 3.1 8.7 7.4 9.7 4.3-1 7.4-5.2 7.4-9.7V5.6Z"/><path d="M12 8.6v6M9 11.6h6"/></svg></span><span>MDRRMO CONSOLE</span>
+  </div>
+  <div class="agency-top-actions">
+    <div class="live-indicator" id="liveIndicator"><i></i><span>Checking connection</span></div>
+    <!-- The count is the real number of unacknowledged incidents, not a
+         notification feed. It says what it counts. -->
+    <span class="alert-bell" id="alertBell" role="status" hidden title="Unacknowledged incidents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 9.4a5.6 5.6 0 1 0-11.2 0c0 6.4-2.4 8.2-2.4 8.2h16s-2.4-1.8-2.4-8.2Z"/><path d="M13.6 20.6a1.9 1.9 0 0 1-3.2 0"/></svg><b id="alertCount">0</b></span>
+    <div class="agency-who" id="agencyWho" hidden>
+      <span class="who-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.6"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg></span>
+      <span class="who-text"><strong id="agencyAccount"></strong><small id="agencyRole"></small></span>
+    </div>
+    <button id="logoutBtn" hidden>Sign out</button>
+  </div>
+</header>
+
+<div class="console-shell">
+<div class="console-body">
+<section class="login-wrap" id="loginView">
+  <div class="login-card">
+    <p class="login-kicker">AUTHORIZED MDRRMO ACCESS</p>
+    <h1>Emergency Console</h1>
+    <p>For authorized MDRRMO personnel assigned to Masinloc emergency reports. Accounts must be explicitly activated for MDRRMO access.</p>
+    <form id="loginForm">
+      <label>Email<input id="email" type="email" autocomplete="username" required></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <div class="login-actions"><button class="primary" type="submit">Sign in</button><button class="secondary" type="button" id="magicBtn">Email sign-in link</button></div>
+      <div class="login-message" id="loginMessage" role="alert"></div>
+    </form>
+    <div class="unauthorized" id="unauthorized" hidden>This account is authenticated but is not currently authorized for the MDRRMO emergency console.</div>
+  </div>
+</section>
+
+<main class="console" id="consoleView" hidden>
+  <div class="console-head">
+    <div><p>MDRRMO · MASINLOC EMERGENCY RESPONSE</p><h1>Incident Operations</h1></div>
+    <div class="console-head-actions"><button id="refreshBtn">Refresh</button></div>
+  </div>
+  <section class="metrics" id="metrics"></section>
+  <section class="map-section" aria-labelledby="mapTitle">
+    <div class="map-head">
+      <h2 id="mapTitle">Live incident map</h2>
+      <p class="map-legend">
+        <span class="legend-pin p-critical"></span>Critical
+        <span class="legend-pin p-high"></span>High
+        <span class="legend-pin p-normal"></span>Normal
+        <span class="legend-pin p-low"></span>Low
+        <span class="legend-pin p-unassessed"></span>Unassessed
+        <span class="legend-pin is-stale"></span>Last known
+      </p>
+    </div>
+    <div class="opmap-host" id="incidentMap"></div>
+  </section>
+
+  <section class="workspace">
+    <div class="incident-column"><h2 class="queue-title">Recent incidents</h2>
+      <!-- One console, both kinds of traffic. These are views over the same
+           queue, not separate backends: Emergency and Assistance filter on the
+           resident's declared report_mode, the rest on operational state. -->
+      <div class="view-chips" role="group" aria-label="Filter incidents">
+        <button class="view-chip is-active" type="button" data-view="all">All <span data-count>0</span></button>
+        <button class="view-chip" type="button" data-view="emergency">Emergency <span data-count>0</span></button>
+        <button class="view-chip" type="button" data-view="assistance">Assistance <span data-count>0</span></button>
+        <button class="view-chip" type="button" data-view="unacknowledged">Unacknowledged <span data-count>0</span></button>
+        <button class="view-chip view-more" type="button" id="moreViews" aria-expanded="false">More <span aria-hidden="true">⌄</span></button>
+        <span class="view-extra" id="viewExtra" hidden>
+          <button class="view-chip" type="button" data-view="active">Active <span data-count>0</span></button>
+          <button class="view-chip" type="button" data-view="resolved">Resolved <span data-count>0</span></button>
+        </span>
+      </div>
+      <div class="filters"><input id="searchInput" placeholder="Search reference, incident, place…"><select id="statusFilter"><option value="">All statuses</option><option value="received">Received</option><option value="acknowledged">Acknowledged</option><option value="assigned">Assigned</option><option value="dispatched">Dispatched</option><option value="en_route">En route</option><option value="on_scene">On scene</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><select id="priorityFilter"><option value="">All priorities</option><option value="unassessed">Unassessed</option><option value="critical">Critical</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
+      <div class="incident-list" id="incidentList"></div>
+      <button class="view-all" type="button" id="viewAll">VIEW ALL INCIDENTS</button>
+    </div>
+    <div class="detail-column" id="detailColumn"><div class="detail-empty"><div><strong>Select an incident</strong><p>Location, messages, assignment and response actions will appear here.</p></div></div></div>
+  </section>
+</main>
+</div>
+<nav class="console-rail" id="consoleRail" aria-label="Console sections">
+      <button class="rail-item is-active" type="button" data-rail="view"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="3.2" width="7.2" height="7.2" rx="1.6"/><rect x="13.6" y="3.2" width="7.2" height="7.2" rx="1.6"/><rect x="3.2" y="13.6" width="7.2" height="7.2" rx="1.6"/><rect x="13.6" y="13.6" width="7.2" height="7.2" rx="1.6"/></svg></span><span>Dashboard</span></button>
+      <button class="rail-item" type="button" data-rail="queue"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7h-.2a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 5.4 6.3l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1v-.2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.8 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.4 1Z"/></svg></span><span>Incidents</span></button>
+      <button class="rail-item" type="button" data-rail="map"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2.8 6.6 6-2.4 6 2.4 6-2.4v13.2l-6 2.4-6-2.4-6 2.4Z"/><path d="M8.8 4.2v13.2M14.8 6.6v13.2"/></svg></span><span>Map</span></button>
+      <span class="rail-item is-pending" role="link" aria-disabled="true" title="Messages is not available yet"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="4.6" width="18.4" height="14.8" rx="2.4"/><path d="m3.4 6.2 8.6 6 8.6-6"/></svg></span><span>Messages</span><em class="rail-soon">Soon</em></span>
+      <span class="rail-item is-pending" role="link" aria-disabled="true" title="Teams is not available yet"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.4" r="3"/><path d="M3.4 19.4a5.6 5.6 0 0 1 11.2 0"/><circle cx="17.4" cy="9.6" r="2.4"/><path d="M16 14.6a4.6 4.6 0 0 1 4.6 4.8"/></svg></span><span>Teams</span><em class="rail-soon">Soon</em></span>
+      <span class="rail-item is-pending" role="link" aria-disabled="true" title="Reports is not available yet"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.2H7a1.8 1.8 0 0 0-1.8 1.8v14a1.8 1.8 0 0 0 1.8 1.8h10a1.8 1.8 0 0 0 1.8-1.8V8Z"/><path d="M14 3.2V8h4.8M8.6 12.6h6.8M8.6 16.2h6.8"/></svg></span><span>Reports</span><em class="rail-soon">Soon</em></span>
+      <span class="rail-item is-pending" role="link" aria-disabled="true" title="Resources is not available yet"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.4 8.6 8.6-4.4 8.6 4.4-8.6 4.4Z"/><path d="m3.4 12.6 8.6 4.4 8.6-4.4M3.4 16.4 12 20.8l8.6-4.4"/></svg></span><span>Resources</span><em class="rail-soon">Soon</em></span>
+      <span class="rail-item is-pending" role="link" aria-disabled="true" title="Settings is not available yet"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7h-.2a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 5.4 6.3l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1v-.2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.8 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.4 1Z"/></svg></span><span>Settings</span><em class="rail-soon">Soon</em></span>
+      <button class="rail-item rail-logout" type="button" id="railLogout"><span class="rail-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 20.4H5.6a1.8 1.8 0 0 1-1.8-1.8V5.4a1.8 1.8 0 0 1 1.8-1.8h3.8"/><path d="m15.4 16.4 4.4-4.4-4.4-4.4M19.8 12H9.4"/></svg></span><span>Logout</span></button>
+</nav>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="agency.js?v=20260831-4"></script>
+</body>
+</html>
