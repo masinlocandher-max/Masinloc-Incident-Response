@@ -9,9 +9,6 @@ const fail=m=>failures.push(m);
 
 function sql(query,{expectFail=false}={}){
   try{
-    // -q suppresses command-status noise such as SET/UPDATE. Without it,
-    // a correct RLS count is returned as "SET\nSET\n2" and an exact-value
-    // assertion falsely reports a policy failure.
     const out=execFileSync('psql',[DB,'-qAt','-v','ON_ERROR_STOP=1','-c',query],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
     if(expectFail)fail(`SQL unexpectedly succeeded: ${query.slice(0,90)}…`);
     return out;
@@ -21,20 +18,35 @@ function sql(query,{expectFail=false}={}){
   }
 }
 
-async function api(payload){
-  const r=await fetch(ENDPOINT,{method:'POST',headers:{'content-type':'application/json','origin':ORIGIN},body:JSON.stringify(payload)});
+function localSupabaseEnv(){
+  const raw=execFileSync('supabase',['status','-o','env'],{encoding:'utf8'});
+  const env={};
+  for(const line of raw.split(/\r?\n/)){
+    const m=line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if(!m)continue;
+    let value=m[2].trim();
+    if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);
+    env[m[1]]=value;
+  }
+  return env;
+}
+
+async function api(payload,token=null){
+  const headers={'content-type':'application/json','origin':ORIGIN};
+  if(token)headers.authorization=`Bearer ${token}`;
+  const r=await fetch(ENDPOINT,{method:'POST',headers,body:JSON.stringify(payload)});
   const body=await r.json().catch(()=>({}));
   return {status:r.status,body};
 }
 
-function report(mode,agency){
+function report(mode,agency,label='Local CI'){
   return {
     client_report_id:crypto.randomUUID(),
     report_secret:crypto.randomBytes(40).toString('base64url'),
     target_agency:agency,
     report_mode:mode,
     incident_type:mode==='assistance'?'suspicious_activity':'threat',
-    description:`Local CI ${mode} report`,
+    description:`${label} ${mode} report`,
     reporter_name:null,
     reporter_contact:null,
     contact_preference:'chat',
@@ -48,6 +60,28 @@ function report(mode,agency){
   };
 }
 
+async function createLocalAuthSession(){
+  const env=localSupabaseEnv();
+  const base=env.API_URL||'http://127.0.0.1:54321';
+  const anon=env.ANON_KEY;
+  if(!anon)throw new Error('Supabase local ANON_KEY not found in `supabase status -o env`.');
+  const email=`edge-reporter-${Date.now()}-${crypto.randomUUID().slice(0,8)}@example.invalid`;
+  const password=`Ci-${crypto.randomBytes(18).toString('base64url')}!9a`;
+  const common={
+    'content-type':'application/json',
+    'apikey':anon,
+    'authorization':`Bearer ${anon}`
+  };
+  let r=await fetch(`${base}/auth/v1/signup`,{method:'POST',headers:common,body:JSON.stringify({email,password})});
+  let body=await r.json().catch(()=>({}));
+  if(!body.access_token){
+    r=await fetch(`${base}/auth/v1/token?grant_type=password`,{method:'POST',headers:common,body:JSON.stringify({email,password})});
+    body=await r.json().catch(()=>({}));
+  }
+  if(!body.access_token||!body.user?.id)throw new Error(`Could not obtain local auth session: ${r.status} ${JSON.stringify(body)}`);
+  return {token:body.access_token,userId:body.user.id,email};
+}
+
 // Production-equivalent shared dependency used by the Edge Function.
 sql("\\i scripts/local-emergency-bootstrap.sql");
 
@@ -57,6 +91,7 @@ select json_build_object(
   'reporter_column', exists(select 1 from information_schema.columns where table_schema='public' and table_name='emergency_incidents' and column_name='reporter_user_id'),
   'report_mode_column', exists(select 1 from information_schema.columns where table_schema='public' and table_name='emergency_incidents' and column_name='report_mode'),
   'reporter_policy', exists(select 1 from pg_policies where schemaname='public' and tablename='emergency_incidents' and policyname='emergency_incidents_reporter_read'),
+  'member_cap_trigger', exists(select 1 from pg_trigger where tgname='emergency_agency_member_limit_guard' and not tgisinternal),
   'trigger_anon_blocked', not has_function_privilege('anon','public.emergency_freeze_resident_fields()','EXECUTE'),
   'trigger_auth_blocked', not has_function_privilege('authenticated','public.emergency_freeze_resident_fields()','EXECUTE'),
   'trigger_service_allowed', has_function_privilege('service_role','public.emergency_freeze_resident_fields()','EXECUTE'),
@@ -102,8 +137,6 @@ function asUser(userId,query){
   return sql(`set role authenticated; set request.jwt.claims='{"sub":"${userId}","role":"authenticated"}'; ${query}`);
 }
 
-// Before interpreting any RLS result, prove our local session emulates the
-// authenticated user's auth.uid() exactly as PostgREST does.
 const uidCheck=asUser(PNP,'select auth.uid();');
 if(uidCheck!==PNP)fail(`auth.uid() context was not established; expected ${PNP}, got ${JSON.stringify(uidCheck)}`);
 
@@ -116,11 +149,9 @@ if(reporterCount!=='1')fail(`Reporter RLS did not expose exactly the resident-ow
 const reporterMessageCount=asUser(REPORTER,`select count(*) from public.emergency_messages where incident_id='${IOWN}';`);
 if(reporterMessageCount!=='1')fail(`Reporter public-message RLS expected 1 visible message, got ${JSON.stringify(reporterMessageCount)}`);
 
-// The hardening migration intentionally grants responders UPDATE only on
-// operational columns. A resident-authored field may therefore be stopped by
-// column privilege before the freeze trigger runs. Either mechanism is a valid
-// denial; the invariant above separately proves description/reporter_user_id
-// are not update-granted while status is.
+// Resident-authored fields are protected twice: column grants keep them out of
+// the responder UPDATE surface, and the trigger freezes them if a privileged
+// path ever reaches the row.
 const frozenErr=sql(`set role authenticated; set request.jwt.claims='{"sub":"${PNP}","role":"authenticated"}'; update public.emergency_incidents set description='tampered' where id='${IPNP}';`,{expectFail:true});
 if(!/(permission denied for table emergency_incidents|cannot change description|resident.*own report|check_violation)/i.test(frozenErr))fail(`Responder resident-field rewrite was not denied as expected; error was ${JSON.stringify(frozenErr.slice(0,500))}`);
 
@@ -130,15 +161,52 @@ if(sql(`select count(*) from public.emergency_events where incident_id='${IPNP}'
 const adminErr=sql(`set role authenticated; set request.jwt.claims='{"sub":"${PNP}","role":"authenticated"}'; select * from public.emergency_activate_member('resident-ci@example.invalid','pnp','operator',null);`,{expectFail:true});
 if(!/platform administrator/i.test(adminErr))fail(`Responder activation helper did not enforce platform-admin authorization; error was ${JSON.stringify(adminErr.slice(0,500))}`);
 
-// Edge Function lifecycle using anonymous resident contract.
+// The public readiness action says only whether each desk has any active
+// responder. It must not disclose names, roles, e-mails or counts.
+const readiness=await api({action:'readiness'});
+if(readiness.status!==200||readiness.body?.determined!==true||readiness.body?.staffed?.pnp!==true||readiness.body?.staffed?.mdrrmo!==true)fail(`Readiness did not reflect the seeded staffed desks: ${readiness.status} ${JSON.stringify(readiness.body)}`);
+const readinessKeys=Object.keys(readiness.body||{}).sort().join(',');
+if(readinessKeys!=='determined,ok,staffed')fail(`Readiness exposed unexpected top-level data: ${readinessKeys}`);
+if(Object.keys(readiness.body?.staffed||{}).sort().join(',')!=='mdrrmo,pnp')fail('Readiness staffed object exposed fields beyond pnp/mdrrmo booleans');
+
+// Hard database cap: the existing PNP member plus nine more is allowed; the
+// 11th active PNP responder must be rejected even through direct SQL.
+sql(`
+do $$
+declare i integer; v uuid;
+begin
+  for i in 1..9 loop
+    v := gen_random_uuid();
+    insert into auth.users(id,aud,role,email,created_at,updated_at)
+      values(v,'authenticated','authenticated','pnp-cap-'||i||'@example.invalid',now(),now());
+    insert into public.emergency_agency_members(user_id,agency,role,active)
+      values(v,'pnp','operator',true);
+  end loop;
+end $$;
+`);
+if(sql("select count(*) from public.emergency_agency_members where agency='pnp' and active;")!=='10')fail('PNP responder cap setup did not reach exactly 10 active accounts');
+const capErr=sql(`
+do $$
+declare v uuid := gen_random_uuid();
+begin
+  insert into auth.users(id,aud,role,email,created_at,updated_at)
+    values(v,'authenticated','authenticated','pnp-cap-11@example.invalid',now(),now());
+  insert into public.emergency_agency_members(user_id,agency,role,active)
+    values(v,'pnp','operator',true);
+end $$;
+`,{expectFail:true});
+if(!/maximum of 10 active responder accounts/i.test(capErr))fail(`11th active responder was not rejected by the database cap: ${JSON.stringify(capErr.slice(0,500))}`);
+
+// Anonymous resident lifecycle remains the baseline contract.
 const urgent=report('emergency','pnp');
 const urgentSubmit=await api({action:'submit',report:urgent});
-if(urgentSubmit.status!==201||!urgentSubmit.body.ok)fail(`Emergency submit failed: ${urgentSubmit.status} ${JSON.stringify(urgentSubmit.body)}`);
+if(urgentSubmit.status!==201||!urgentSubmit.body.ok||urgentSubmit.body.attributed!==false)fail(`Anonymous Emergency submit failed or was falsely attributed: ${urgentSubmit.status} ${JSON.stringify(urgentSubmit.body)}`);
 if(sql(`select report_mode from public.emergency_incidents where client_report_id='${urgent.client_report_id}';`)!=='emergency')fail('Emergency report_mode was not persisted as emergency');
+if(sql(`select reporter_user_id is null from public.emergency_incidents where client_report_id='${urgent.client_report_id}';`)!=='t')fail('Anonymous Emergency report unexpectedly received reporter_user_id');
 
 const assistance=report('assistance','mdrrmo');
 const assistanceSubmit=await api({action:'submit',report:assistance});
-if(assistanceSubmit.status!==201||!assistanceSubmit.body.ok)fail(`Assistance submit failed: ${assistanceSubmit.status} ${JSON.stringify(assistanceSubmit.body)}`);
+if(assistanceSubmit.status!==201||!assistanceSubmit.body.ok||assistanceSubmit.body.attributed!==false)fail(`Anonymous Assistance submit failed or was falsely attributed: ${assistanceSubmit.status} ${JSON.stringify(assistanceSubmit.body)}`);
 if(sql(`select report_mode from public.emergency_incidents where client_report_id='${assistance.client_report_id}';`)!=='assistance')fail('Assistance report_mode was not persisted as assistance');
 
 const duplicate=await api({action:'submit',report:urgent});
@@ -158,9 +226,27 @@ if(message.status!==201||!message.body.ok)fail('Resident message endpoint failed
 const wrong=await api({action:'status',client_report_id:urgent.client_report_id,report_secret:crypto.randomBytes(40).toString('base64url')});
 if(wrong.status!==404)fail(`Wrong report secret should be indistinguishable from not-found; got ${wrong.status}`);
 
+// Optional signed-in attribution: a valid token attaches exactly that user to
+// the report. An invalid token must degrade to anonymous instead of blocking
+// an emergency report.
+let session=null;
+try{session=await createLocalAuthSession()}catch(error){fail(error instanceof Error?error.message:String(error))}
+if(session){
+  const linked=report('emergency','mdrrmo','Local CI signed-in');
+  const linkedSubmit=await api({action:'submit',report:linked},session.token);
+  if(linkedSubmit.status!==201||linkedSubmit.body.attributed!==true)fail(`Valid signed-in report was not attributed: ${linkedSubmit.status} ${JSON.stringify(linkedSubmit.body)}`);
+  const linkedUser=sql(`select reporter_user_id::text from public.emergency_incidents where client_report_id='${linked.client_report_id}';`);
+  if(linkedUser!==session.userId)fail(`Signed-in report linked to ${linkedUser||'NULL'}, expected ${session.userId}`);
+
+  const stale=report('assistance','pnp','Local CI stale-token');
+  const staleSubmit=await api({action:'submit',report:stale},'invalid.expired.token');
+  if(staleSubmit.status!==201||staleSubmit.body.attributed!==false)fail(`Invalid token blocked reporting or falsely attributed it: ${staleSubmit.status} ${JSON.stringify(staleSubmit.body)}`);
+  if(sql(`select reporter_user_id is null from public.emergency_incidents where client_report_id='${stale.client_report_id}';`)!=='t')fail('Invalid-token report was not stored anonymously');
+}
+
 if(failures.length){
   console.error(`Local Supabase emergency QA failed (${failures.length}):`);
   failures.forEach(x=>console.error(` - ${x}`));
   process.exit(1);
 }
-console.log('Local Supabase emergency QA passed: six-migration schema, RLS boundaries, immutable resident fields, audit events, anonymous lifecycle, duplicate idempotency, and emergency/assistance persistence verified.');
+console.log('Local Supabase emergency QA passed: seven-migration schema, agency/reporter RLS, responder cap, immutable resident fields, audit events, readiness privacy, anonymous lifecycle, signed-in attribution fallback, duplicate idempotency, and emergency/assistance persistence verified.');
