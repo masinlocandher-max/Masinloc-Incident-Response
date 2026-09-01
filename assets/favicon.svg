@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Masinloc">
+  <title>Masinloc</title>
+  <defs>
+    <linearGradient id="tricolor" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1E63E9"/>
+      <stop offset="0.3333" stop-color="#1E63E9"/>
+      <stop offset="0.3333" stop-color="#E61E25"/>
+      <stop offset="0.6666" stop-color="#E61E25"/>
+      <stop offset="0.6666" stop-color="#FFC700"/>
+      <stop offset="1" stop-color="#FFC700"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#061A46"/>
+  <path d="M13 46 L21.5 18 L32 35 L42.5 18 L51 46"
+        fill="none"
+        stroke="url(#tricolor)"
+        stroke-width="7"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

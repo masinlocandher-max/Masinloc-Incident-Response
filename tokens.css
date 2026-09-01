@@ -1,0 +1,61 @@
+/* Masinloc design tokens — the single source of truth for the palette.
+
+   DESIGN-SYSTEM.md names these values as the locked Masinloc identity. Every
+   surface (public editorial, Masinloc Connect, admin, 404) links this file
+   first, so a colour is defined once here and never restated in a page
+   stylesheet. Adding a raw hex to another stylesheet re-introduces the drift
+   this file exists to remove.
+
+   Both naming schemes are published because the surfaces grew separately:
+   the short names are used by the public editorial layer, the --masinloc-*
+   names by Masinloc Connect. They resolve to the same colours. */
+
+:root{
+  /* Locked identity */
+  --blue:#0D3B9E;
+  --blue-bright:#1E63E9;
+  --red:#E61E25;
+  --yellow:#FFC700;
+  /* Readable stand-in for --yellow wherever the colour carries text or sits
+     behind white type. #FFC700 fails contrast in both roles. */
+  --yellow-ink:#8A5A00;
+  /* Same idea for red. #E61E25 clears 4.5:1 on pure white by a hair and fails
+     the moment the ground is tinted at all — measured at 4.05:1 as a 12px
+     label on Masinloc Connect's own red card wash. Use --red for marks, rules
+     and icon chips; use this wherever red carries small text. */
+  --red-ink:#C2141A;
+  --navy:#061A46;
+  --navy-deep:#03112F;
+
+  /* Neutrals */
+  --ink:#111827;
+  --text:#3B465F;
+  --muted:#6E778C;
+  --line:#E6E9F0;
+  --soft:#F7F8FB;
+  --white:#FFFFFF;
+
+  /* Masinloc Connect aliases — same colours, the names that layer uses. */
+  --masinloc-blue:var(--blue);
+  --masinloc-blue-bright:var(--blue-bright);
+  --masinloc-red:var(--red);
+  --masinloc-yellow:var(--yellow);
+  --masinloc-navy:var(--navy);
+  --masinloc-navy-deep:var(--navy-deep);
+  --masinloc-ink:var(--ink);
+  --masinloc-line:var(--line);
+
+  /* Type */
+  --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;
+  --font-display:"Helvetica Neue","Arial Nova",Arial,sans-serif;
+  --font-editorial:Georgia,"Times New Roman",serif;
+
+  /* Motion */
+  --ease:180ms ease;
+  --ease-standard:cubic-bezier(.2,.75,.25,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+
+  /* The smallest font size a form control may use. Anything below 16px makes
+     mobile Safari zoom the page on focus. */
+  --control-font:16px;
+}

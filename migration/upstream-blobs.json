@@ -1,0 +1,187 @@
+{
+  "source_repository": "masinlocandher-max/Masinloc-Website",
+  "source_commit": "185c144ad5f12415d5276059741978078d22263f",
+  "source_tree": "9130e72e0c8f910014e2fcf4a9066c13405a3427",
+  "files": [
+    {
+      "source_path": "assets/apple-touch-icon.png",
+      "target_path": "assets/apple-touch-icon.png",
+      "sha": "7defd00807c9ec8213e70423433def139d5721cd",
+      "required": true
+    },
+    {
+      "source_path": "assets/favicon.svg",
+      "target_path": "assets/favicon.svg",
+      "sha": "a4f7a702840c3327fadbdebed68b711cf552ffc3",
+      "required": true
+    },
+    {
+      "source_path": "assets/masinloc-logo.webp",
+      "target_path": "assets/masinloc-logo.webp",
+      "sha": "5174bb11be15bbdd680a3ded86a72a21c32e13fa",
+      "required": true
+    },
+    {
+      "source_path": "assets/vendor/supabase.js",
+      "target_path": "assets/vendor/supabase.js",
+      "sha": "22eafa097638c6bd7469ad724fe552ecc2851561",
+      "required": true
+    },
+    {
+      "source_path": "connect.html",
+      "target_path": "connect.html",
+      "sha": "4ef52c138e0e7056243f0aa6c0a09de4a3f9e112",
+      "required": true
+    },
+    {
+      "source_path": "emergency/access.html",
+      "target_path": "emergency/access.html",
+      "sha": "c2ade7e8ca383465f5a93dd0f140e80ded1666c5",
+      "required": true
+    },
+    {
+      "source_path": "emergency/agency.css",
+      "target_path": "emergency/agency.css",
+      "sha": "ac17d6a0a3a4d3047c213a2e6f63a62ba9541952",
+      "required": true
+    },
+    {
+      "source_path": "emergency/agency.js",
+      "target_path": "emergency/agency.js",
+      "sha": "d3a160aa375148d9d41e840125fde2f9a79752ba",
+      "required": true
+    },
+    {
+      "source_path": "emergency/emergency.css",
+      "target_path": "emergency/emergency.css",
+      "sha": "fcab1499c96cd622d0139b9b39f30a029a37298a",
+      "required": true
+    },
+    {
+      "source_path": "emergency/emergency.js",
+      "target_path": "emergency/emergency.js",
+      "sha": "5a16c76208f925269127d43e22094d8665b93b54",
+      "required": true
+    },
+    {
+      "source_path": "emergency/index.html",
+      "target_path": "emergency/index.html",
+      "sha": "7b8f75cb56c3dda2678af68c5062f0164fbe1fe7",
+      "required": true
+    },
+    {
+      "source_path": "emergency/manifest.webmanifest",
+      "target_path": "emergency/manifest.webmanifest",
+      "sha": "25cac90621a597f883e640dff1364dee52ae3f59",
+      "required": true
+    },
+    {
+      "source_path": "emergency/map.js",
+      "target_path": "emergency/map.js",
+      "sha": "6d0d3f50b6349d3f630fb824809c873c657159e3",
+      "required": true
+    },
+    {
+      "source_path": "emergency/mdrrmo.html",
+      "target_path": "emergency/mdrrmo.html",
+      "sha": "cf5da67b3cb9099b95ef46ac58f4cae83db39378",
+      "required": true
+    },
+    {
+      "source_path": "emergency/pnp.html",
+      "target_path": "emergency/pnp.html",
+      "sha": "19741f500d1b5a08323abddd61c57af08bbd5d28",
+      "required": true
+    },
+    {
+      "source_path": "emergency/sw.js",
+      "target_path": "emergency/sw.js",
+      "sha": "d74b7d0d44e5a181406f1cc12e415b8da51f8685",
+      "required": true
+    },
+    {
+      "source_path": "scripts/check-emergency-consolidation.py",
+      "target_path": "scripts/check-emergency-consolidation.py",
+      "sha": "dabca4484a3a1d9968f6034c48b0999bf3c242bd",
+      "required": true
+    },
+    {
+      "source_path": "scripts/check-migrations-apply.py",
+      "target_path": "scripts/check-migrations-apply.py",
+      "sha": "f35c33ad4ad9c186d747eb4ed6033041c4bee358",
+      "required": true
+    },
+    {
+      "source_path": "scripts/emergency-browser-qa.mjs",
+      "target_path": "scripts/emergency-browser-qa.mjs",
+      "sha": "f24055fdd3bc1d2b7cad66eb3004d4dc1cd9de3e",
+      "required": true
+    },
+    {
+      "source_path": "scripts/emergency-qa.mjs",
+      "target_path": "scripts/emergency-qa.mjs",
+      "sha": "d0237ad859645e62538c8f89ccb84f3c1305ea46",
+      "required": true
+    },
+    {
+      "source_path": "supabase/functions/emergency-responder-admin/index.ts",
+      "target_path": "supabase/functions/emergency-responder-admin/index.ts",
+      "sha": "25373ac2987c41bdda0b08cf0925517515cd1d10",
+      "required": true
+    },
+    {
+      "source_path": "supabase/functions/emergency-response/index.ts",
+      "target_path": "supabase/functions/emergency-response/index.ts",
+      "sha": "890f03c476cb91ff96f0d0a03eba2cc848c0f4b2",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260831143000_emergency_response_core.sql",
+      "target_path": "supabase/migrations/20260831143000_emergency_response_core.sql",
+      "sha": "3af156c7d568305b8d7252f8c57993bf150ca90e",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260831152000_emergency_response_hardening.sql",
+      "target_path": "supabase/migrations/20260831152000_emergency_response_hardening.sql",
+      "sha": "3b759282752a816af65730510f04aae6697bbdbc",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260831160000_emergency_report_mode_and_resident_immutability.sql",
+      "target_path": "supabase/migrations/20260831160000_emergency_report_mode_and_resident_immutability.sql",
+      "sha": "096312a10fd93ae5943f8c253ae30b3e28e17441",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260831180000_emergency_member_activation.sql",
+      "target_path": "supabase/migrations/20260831180000_emergency_member_activation.sql",
+      "sha": "5155d640feaeea6ca4c4a947b8f5b03a4f12f3bd",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260831190000_emergency_reporter_account.sql",
+      "target_path": "supabase/migrations/20260831190000_emergency_reporter_account.sql",
+      "sha": "13b8f4bc691ba29ae0c9dccba37d4b10a3474e46",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260901023745_revoke_emergency_trigger_rpc_execution.sql",
+      "target_path": "supabase/migrations/20260901023745_revoke_emergency_trigger_rpc_execution.sql",
+      "sha": "2e2f7892b4c093be08216eb1a33b7ca1a5f733d1",
+      "required": true
+    },
+    {
+      "source_path": "supabase/migrations/20260901032528_limit_emergency_agency_members_to_10.sql",
+      "target_path": "supabase/migrations/20260901032528_limit_emergency_agency_members_to_10.sql",
+      "sha": "570b6bf21406d3dc40cd80639ca5252cc0433ab8",
+      "required": true
+    },
+    {
+      "source_path": "tokens.css",
+      "target_path": "tokens.css",
+      "sha": "eb51f4b0e359a2cad31ab04371d212af16565e5d",
+      "required": true
+    }
+  ]
+}

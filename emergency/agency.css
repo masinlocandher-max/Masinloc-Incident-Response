@@ -1,0 +1,327 @@
+*{box-sizing:border-box}html{font-family:Arial,Helvetica,sans-serif;background:#eef2f6;color:#0c1832}body{margin:0;min-height:100vh}.agency-top{height:68px;background:#061634;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.12);position:sticky;top:0;z-index:20}.agency-brand{display:flex;align-items:center;gap:14px}.agency-brand img{width:155px;height:auto;display:block}.agency-brand span{padding-left:14px;border-left:1px solid rgba(255,255,255,.2);font-weight:900;letter-spacing:.08em;font-size:12px}.agency-top-actions{display:flex;align-items:center;gap:10px}.live-indicator{display:flex;align-items:center;gap:7px;font-size:11px;color:#cbd5e7}.live-indicator i{display:block;width:8px;height:8px;border-radius:50%;background:#29b563}.live-indicator.offline i{background:#e38121}.agency-top button{border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer}.login-wrap{min-height:calc(100vh - 68px);display:grid;place-items:center;padding:24px}.login-card{width:min(440px,100%);background:#fff;border:1px solid #d9e0e9;border-radius:20px;padding:28px;box-shadow:0 24px 70px rgba(10,25,55,.12)}.login-kicker{margin:0 0 10px;color:#0d3b9e;font-weight:900;font-size:11px;letter-spacing:.14em}.mdrrmo-page .login-kicker{color:#b8171d}.login-card h1{margin:0;font-size:32px;letter-spacing:-.035em}.login-card>p{color:#66738a;line-height:1.5}.login-card label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:800;margin-top:14px}.login-card input{border:1px solid #cbd4e1;border-radius:10px;padding:13px;font:inherit}.login-actions{display:flex;gap:8px;margin-top:18px}.login-actions button{flex:1;border:0;border-radius:10px;padding:13px;font-weight:900;cursor:pointer}.login-actions .primary{background:#0d3b9e;color:#fff}.mdrrmo-page .login-actions .primary{background:#b8171d;color:#fff}.login-actions .secondary{background:#eef2f7;color:#21314e}.login-message{min-height:18px;color:#a41c24;font-size:12px;margin-top:12px}.unauthorized{background:#fff3f3;border:1px solid #efc8cb;color:#811c22;border-radius:12px;padding:13px;margin-top:14px;line-height:1.5}.console{max-width:1600px;margin:0 auto;padding:20px}.console-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:16px}.console-head p{margin:0 0 4px;font-size:11px;letter-spacing:.14em;color:#68758b;font-weight:900}.console-head h1{margin:0;font-size:34px;letter-spacing:-.035em}.console-head-actions{display:flex;gap:8px}.console-head-actions button{border:1px solid #cbd5e1;background:#fff;border-radius:9px;padding:10px 13px;font-weight:800;cursor:pointer}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.metric{background:#fff;border:1px solid #dce3eb;border-radius:13px;padding:14px}.metric span{display:block;color:#748095;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.metric strong{display:block;font-size:25px;margin-top:6px}.workspace{display:grid;grid-template-columns:minmax(390px,.75fr) minmax(500px,1.25fr);gap:14px;min-height:650px}.incident-column,.detail-column{background:#fff;border:1px solid #dce3eb;border-radius:16px;overflow:hidden}.filters{padding:12px;border-bottom:1px solid #e2e7ee;display:grid;grid-template-columns:1fr auto auto;gap:8px}.filters input,.filters select{border:1px solid #ccd5e1;border-radius:9px;padding:10px;font:inherit;min-width:0}.incident-list{max-height:calc(100vh - 280px);overflow:auto}.incident-row{width:100%;border:0;border-bottom:1px solid #e7ebf0;background:#fff;text-align:left;padding:15px;cursor:pointer;color:inherit}.incident-row:hover,.incident-row.active{background:#f5f8fd}.incident-row.active{box-shadow:inset 4px 0 #1e63e9}.mdrrmo-page .incident-row.active{box-shadow:inset 4px 0 #e61e25}.row-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.reference{font-weight:900;font-size:13px}.row-time{font-size:10px;color:#7b8798}.row-title{font-size:15px;font-weight:800;margin-top:7px}.row-location{font-size:12px;color:#66738a;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badges{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}.badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:900;padding:5px 7px;border-radius:999px;background:#edf1f6;color:#4b5870}.badge.received{background:#fff0d8;color:#8a5200}.badge.acknowledged,.badge.assigned,.badge.dispatched,.badge.en_route,.badge.on_scene{background:#e5efff;color:#164f9e}.badge.resolved,.badge.closed{background:#e5f5eb;color:#206440}.badge.critical{background:#ffe3e5;color:#a61921}.badge.high{background:#fff0dd;color:#9a5600}.badge.normal{background:#e8f3ed;color:#286143}.empty-list{padding:36px 18px;text-align:center;color:#778398}.detail-empty{height:100%;min-height:500px;display:grid;place-items:center;color:#7d8899;text-align:center;padding:30px}.detail{display:flex;flex-direction:column;min-height:100%}.detail-head{padding:18px 20px;border-bottom:1px solid #e1e7ee;display:flex;justify-content:space-between;gap:18px}.detail-head p{margin:0 0 5px;color:#748095;font-size:10px;letter-spacing:.12em;font-weight:900}.detail-head h2{margin:0;font-size:26px}.detail-head small{display:block;color:#718098;margin-top:6px}.ack-btn{border:0;background:#0d3b9e;color:#fff;border-radius:10px;padding:11px 14px;font-weight:900;align-self:flex-start;cursor:pointer}.mdrrmo-page .ack-btn{background:#b8171d}.incident-summary{padding:15px 20px;border-bottom:1px solid #e4e9ef;display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.summary-item{background:#f6f8fb;border-radius:10px;padding:10px}.summary-item span{display:block;color:#788497;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.summary-item strong{display:block;margin-top:5px;font-size:12px;word-break:break-word}.description-box{padding:16px 20px;border-bottom:1px solid #e4e9ef}.description-box span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#778498;font-weight:900}.description-box p{white-space:pre-wrap;line-height:1.55;margin:7px 0 0}.ops-controls{padding:14px 20px;border-bottom:1px solid #e4e9ef;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}.ops-controls label{display:flex;flex-direction:column;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:900;color:#6d7a8f}.ops-controls select,.ops-controls input{border:1px solid #cbd5e1;border-radius:9px;padding:10px;font:inherit;color:#0d1d39;background:#fff}.ops-buttons{padding:0 20px 15px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e4e9ef}.ops-buttons button,.ops-buttons a{border:1px solid #c9d3df;background:#fff;color:#1b2d4e;border-radius:9px;padding:9px 11px;font-size:11px;font-weight:900;text-decoration:none;cursor:pointer}.ops-buttons .refer{background:#fff8db;border-color:#e9d577;color:#6e5900}.thread-tabs{padding:12px 20px 0;display:flex;gap:8px}.thread-tabs button{border:0;background:#edf1f6;color:#58667e;padding:8px 11px;border-radius:999px;font-weight:800;font-size:11px;cursor:pointer}.thread-tabs button.active{background:#0d3b9e;color:#fff}.mdrrmo-page .thread-tabs button.active{background:#b8171d}.thread{padding:14px 20px;display:flex;flex-direction:column;gap:9px;max-height:280px;overflow:auto;background:#f7f9fb;min-height:150px}.thread-message{max-width:84%;background:#fff;border:1px solid #dce3eb;border-radius:11px;padding:10px 12px}.thread-message.resident{align-self:flex-start}.thread-message.agency{align-self:flex-end;background:#e8f0ff;border-color:#cbdafa}.thread-message.internal{align-self:stretch;max-width:100%;background:#fff7d9;border-color:#e8d98e}.thread-message strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em}.thread-message p{margin:5px 0;white-space:pre-wrap;line-height:1.45}.thread-message small{color:#7c8899;font-size:9px}.reply-form{padding:14px 20px 20px;border-top:1px solid #e0e6ed}.reply-mode{display:flex;gap:13px;margin-bottom:8px;font-size:11px}.reply-mode label{display:flex;align-items:center;gap:5px}.reply-form textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;resize:vertical}.reply-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px}.reply-actions small{color:#748095}.reply-actions button{border:0;background:#0d3b9e;color:#fff;border-radius:9px;padding:10px 14px;font-weight:900;cursor:pointer}.mdrrmo-page .reply-actions button{background:#b8171d}.toast{position:fixed;right:20px;bottom:20px;z-index:50;background:#071936;color:#fff;padding:12px 15px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);font-size:12px}.toast.error{background:#971b22}
+@media(max-width:980px){.workspace{grid-template-columns:1fr}.incident-list{max-height:420px}.detail-column{min-height:600px}.metrics{grid-template-columns:1fr 1fr}.agency-brand img{width:130px}}
+@media(max-width:620px){.agency-top{padding:0 12px}.agency-brand span{font-size:10px}.console{padding:10px}.console-head{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:1fr 1fr}.workspace{display:block}.incident-column{margin-bottom:10px}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.incident-summary,.ops-controls{grid-template-columns:1fr 1fr}.detail-head{align-items:flex-start;flex-direction:column}.agency-top-actions .live-indicator span{display:none}.thread-message{max-width:94%}}
+
+/* --- views over one queue ------------------------------------------------ */
+
+/* Emergency and Assistance are views, not separate systems. An officer works
+   one queue and one console; the chips only change what is listed. */
+.view-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.view-chip {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  padding: 8px 13px; min-height: 38px;
+  border-radius: 999px; border: 1px solid #2A3346;
+  background: #131A28; color: #C6CFE0; cursor: pointer;
+}
+.view-chip span { opacity: 0.6; font-variant-numeric: tabular-nums; }
+.view-chip:hover { border-color: #4A5878; }
+.view-chip.is-active { background: #E8ECF4; border-color: #E8ECF4; color: #0B1220; }
+.view-chip.is-active span { opacity: 0.65; }
+.view-chip:focus-visible { outline: 3px solid #FFC700; outline-offset: 2px; }
+
+/* Mode reads at a glance beside status and priority. Emergency carries the
+   weight; assistance is legible but calm. */
+.badge.mode-emergency { background: #3A1712; color: #FF8F80; }
+.badge.mode-assistance { background: #102A1C; color: #7FD9A1; }
+
+/* ==========================================================================
+   Console design pass — shared shell, agency accent, operations map.
+   ========================================================================== */
+
+.agency-shield{display:grid;place-items:center;width:28px;height:28px;flex:none}
+.agency-shield svg{width:22px;height:22px}
+.pnp-page .agency-shield{color:#7fb0ff}
+.mdrrmo-page .agency-shield{color:#ff9a9f}
+
+.agency-account{
+  font-size:12px;color:#aab6cf;max-width:200px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* --- metrics ------------------------------------------------------------ */
+
+/* Unacknowledged is the only card that carries colour weight: it is the one
+   an operator is scanning for, and a dashboard where every number shouts is a
+   dashboard where none of them do. */
+.metric.urgent{border-color:#8a3a3f}
+.mdrrmo-page .metric.urgent{border-color:#a33}
+.metric.urgent strong{color:#ff8f80}
+
+/* --- map ---------------------------------------------------------------- */
+
+.map-section{margin:0 0 18px}
+.map-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.map-head h2{margin:0;font-size:15px;letter-spacing:.02em}
+.map-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font-size:11px;color:#5b6880}
+/* The legend swatches were sized but never coloured — the priority variants
+   were only defined for pins inside the map, so the key rendered as six
+   invisible dots beside six words. A legend that does not show its colours is
+   not a legend. */
+.legend-pin{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:-6px;background:#c9d2e4;flex:none}
+.legend-pin.p-critical{background:#ff4a3d}
+.legend-pin.p-high{background:#ff9f1c}
+.legend-pin.p-normal{background:#1e63e9}
+.legend-pin.p-low{background:#6f7d99}
+.legend-pin.p-unassessed{background:#c9d2e4}
+/* Last-known is drawn hollow in the key exactly as it is on the map, so the
+   two read as the same thing. */
+.legend-pin.is-stale{background:transparent;box-shadow:inset 0 0 0 2px #5b6880}
+
+.opmap-host{
+  position:relative;height:clamp(260px,38vh,440px);
+  border-radius:14px;overflow:hidden;background:#0d1526;
+  border:1px solid #23304a;touch-action:none;cursor:grab;
+}
+.opmap-host.is-dragging{cursor:grabbing}
+.opmap-tiles,.opmap-pins{position:absolute;inset:0}
+.opmap-tiles img{position:absolute;width:256px;height:256px;user-select:none;pointer-events:none}
+/* Offline: the backdrop goes flat rather than half-drawn, so nobody reads a
+   partial basemap as current coverage. */
+.opmap-host.is-flat .opmap-tiles{opacity:0;}
+.opmap-host.is-flat{background:repeating-linear-gradient(45deg,#0d1526,#0d1526 10px,#111b30 10px,#111b30 20px)}
+
+.opmap-pin{
+  position:absolute;transform:translate(-50%,-100%);
+  width:22px;height:22px;padding:0;border:0;background:none;cursor:pointer;
+}
+.opmap-pin span{
+  display:block;width:16px;height:16px;margin:0 auto;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);border:2px solid #0d1526;background:#8b95a6;
+}
+.opmap-pin.p-critical span{background:#ff4a3d}
+.opmap-pin.p-high span{background:#ff9f1c}
+.opmap-pin.p-normal span{background:#1e63e9}
+.opmap-pin.p-low span{background:#6f7d99}
+.opmap-pin.p-unassessed span{background:#c9d2e4}
+.opmap-pin.p-resolved span{background:#2f9e5f}
+/* A frozen position is drawn hollow as well as labelled, so staleness is not
+   carried by hue alone. */
+.opmap-pin.is-stale span{background:transparent;box-shadow:inset 0 0 0 3px currentColor}
+.opmap-pin.p-critical.is-stale span{color:#ff4a3d}
+.opmap-pin.p-high.is-stale span{color:#ff9f1c}
+.opmap-pin.p-normal.is-stale span{color:#1e63e9}
+.opmap-pin.p-low.is-stale span{color:#6f7d99}
+.opmap-pin.p-unassessed.is-stale span{color:#c9d2e4}
+.opmap-pin.p-resolved.is-stale span{color:#2f9e5f}
+.opmap-pin.is-selected span{box-shadow:0 0 0 3px rgba(255,199,0,.85)}
+.opmap-pin:focus-visible{outline:3px solid #ffc700;outline-offset:2px;border-radius:4px}
+
+/* A group of overlapping incidents. The count is the whole point of drawing
+   one pin for several, so it is legible at pin size and sits on a solid chip
+   rather than over the pin's own colour. */
+.opmap-pin.is-cluster{width:28px;height:28px}
+.opmap-pin.is-cluster span{width:22px;height:22px}
+.opmap-pin.is-cluster b{
+  position:absolute;top:-5px;right:-6px;min-width:17px;height:17px;padding:0 4px;
+  border-radius:999px;background:#0d1526;color:#fff;border:1.5px solid #e8ecf4;
+  font-size:10.5px;font-weight:900;line-height:1;
+  display:grid;place-items:center;font-variant-numeric:tabular-nums;
+}
+
+.opmap-zoom{position:absolute;right:10px;top:10px;display:grid;gap:6px}
+.opmap-zoom button{
+  width:34px;height:34px;border-radius:9px;border:1px solid #2b3a58;
+  background:rgba(10,17,30,.86);color:#e6ecf8;font-size:18px;font-weight:800;cursor:pointer;
+}
+.opmap-zoom button:focus-visible{outline:3px solid #ffc700;outline-offset:2px}
+
+.opmap-attribution{
+  position:absolute;right:8px;bottom:6px;margin:0;
+  font-size:10px;color:#9fb0cc;background:rgba(10,17,30,.7);
+  padding:2px 7px;border-radius:6px;
+}
+.opmap-notice{
+  position:absolute;left:10px;bottom:8px;right:120px;margin:0;
+  font-size:11px;line-height:1.4;color:#ffd894;
+  background:rgba(10,17,30,.85);padding:7px 10px;border-radius:8px;
+}
+
+.queue-title{margin:0 0 12px;font-size:15px;letter-spacing:.02em}
+
+/* --- location state on a row and in detail ------------------------------ */
+
+.loc-state{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.05em}
+.loc-state.live{color:#5fd68f}
+.loc-state.stale{color:#ffc178}
+.loc-detail{font-size:11px;color:#93a0ba}
+
+@media(max-width:900px){
+  .opmap-host{height:clamp(220px,32vh,300px)}
+  .opmap-notice{right:10px;bottom:34px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .opmap-tiles img{transition:none}
+}
+
+
+/* The supplied Masinloc logo is never recoloured to suit a background — it was
+   flattened to white here by brightness(0) invert(1), which throws away the
+   blue, yellow and red the mark is made of. It keeps its own colours and sits
+   on a light chip instead, which is how the header stays dark without the
+   artwork paying for it. */
+.agency-brand{gap:12px}
+.agency-brand img{background:#fff;border-radius:8px;padding:6px 9px}
+
+/* An element asked to be hidden stays hidden.
+
+   .login-wrap sets display:grid, and a class selector beats the user-agent
+   [hidden] rule — so `loginView.hidden = true` did nothing and a responder who
+   signed in was still shown the sign-in card, filling the viewport with the
+   console pushed below it. The consoles toggle every view this way, so the
+   guarantee belongs here once rather than as a display:none on each. */
+.pnp-page [hidden],.mdrrmo-page [hidden]{display:none!important}
+
+/* ==========================================================================
+   Console shell — approved mockup pass.
+   ========================================================================== */
+
+.console-shell{display:flex;align-items:stretch;min-height:calc(100vh - 68px)}
+.console-body{flex:1 1 auto;min-width:0}
+
+/* --- right rail --------------------------------------------------------- */
+
+.console-rail{
+  flex:0 0 132px;display:flex;flex-direction:column;gap:2px;
+  padding:14px 10px;background:#0b1f4d;
+}
+.mdrrmo-page .console-rail{background:#8f1418}
+
+.rail-item{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:14px 6px;border:0;border-radius:12px;background:none;
+  color:#cbd7ef;font:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;text-align:center;line-height:1.2;
+}
+.mdrrmo-page .rail-item{color:#f6d4d5}
+.rail-ico{display:grid;place-items:center}
+.rail-ico svg{width:22px;height:22px}
+.rail-item:hover{background:rgba(255,255,255,.09)}
+.rail-item.is-active{background:#1e63e9;color:#fff}
+.mdrrmo-page .rail-item.is-active{background:#e61e25;color:#fff}
+.rail-item:focus-visible{outline:3px solid #ffc700;outline-offset:-2px}
+
+/* Nothing here pretends to work. A section without a backend is dimmed, is
+   not a button, and carries the word "Soon" — an operator should never wait
+   on a screen that was never going to open. */
+.rail-item.is-pending{opacity:.44;cursor:not-allowed;position:relative}
+.rail-item.is-pending:hover{background:none}
+.rail-soon{
+  font-style:normal;font-size:9px;letter-spacing:.09em;
+  padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.18);
+}
+.rail-logout{margin-top:auto}
+
+.rail-toggle{
+  display:none;width:38px;height:38px;border:0;border-radius:10px;
+  background:rgba(255,255,255,.12);color:#fff;cursor:pointer;place-items:center;
+}
+.rail-toggle svg{width:20px;height:20px}
+
+/* --- header ------------------------------------------------------------- */
+
+.agency-top-actions{gap:14px}
+.alert-bell{position:relative;display:grid;place-items:center;color:#cbd7ef}
+.mdrrmo-page .alert-bell{color:#f6d4d5}
+.alert-bell svg{width:21px;height:21px}
+.alert-bell b{
+  position:absolute;top:-5px;right:-7px;min-width:18px;height:18px;padding:0 4px;
+  border-radius:999px;background:#e61e25;color:#fff;font-size:10.5px;font-weight:900;
+  display:grid;place-items:center;
+}
+.mdrrmo-page .alert-bell b{background:#ffc700;color:#3a2c00}
+
+.agency-who{display:flex;align-items:center;gap:9px;min-width:0}
+.who-avatar{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.14);color:#fff;flex:none;
+}
+.who-avatar svg{width:19px;height:19px}
+.who-text{display:flex;flex-direction:column;min-width:0}
+.who-text strong{font-size:12.5px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.who-text small{font-size:11px;color:#a9b8d6}
+.mdrrmo-page .who-text small{color:#efc2c4}
+
+/* --- metrics, coloured as the design specifies -------------------------- */
+
+.metric strong{font-size:30px;line-height:1}
+.metric.m-unack strong{color:#e61e25}
+.metric.m-active strong{color:#ef7a10}
+.metric.m-deployed strong{color:#1e63e9}
+.metric.m-resolved strong{color:#1e8a4c}
+
+/* --- incident rows ------------------------------------------------------ */
+
+.row-icon{
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  flex:none;color:#fff;
+}
+.row-icon svg{width:21px;height:21px}
+.row-icon.p-critical{background:#e61e25}
+.row-icon.p-high{background:#ef7a10}
+.row-icon.p-normal{background:#f0b429}
+.row-icon.p-low,.row-icon.p-unassessed{background:#8b95a6}
+.row-icon.p-resolved{background:#5c6b82}
+.row-icon.mode-assistance{background:#1e63e9}
+
+.incident-row{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;text-align:left}
+.row-main{min-width:0;display:flex;flex-direction:column;gap:2px}
+.row-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.row-status{font-size:11.5px;color:#93a0ba}
+
+.badge.critical{background:#e61e25;color:#fff}
+.badge.high{background:#ef7a10;color:#fff}
+.badge.normal{background:#f0b429;color:#3a2c00}
+.badge.low{background:#8b95a6;color:#fff}
+.badge.mode-assistance{background:#1e63e9;color:#fff}
+
+.view-more{font-weight:700}
+.view-extra{display:contents}
+
+/* --- the queue card's own inset ----------------------------------------- */
+
+/* The card is edge-to-edge on purpose: rows and filters carry their own
+   padding, so giving the card padding would double theirs. The heading, the
+   chips and the footer button carry none, which left the heading painted
+   across the card's rounded corner. They take the row inset instead. */
+.queue-title{padding:16px 15px 0}
+.view-chips{padding:0 15px}
+
+/* The chips and this button were coloured for a dark surface and landed on a
+   white card as heavy black pills with the selected one reading as the
+   unselected one. On this card the resting state is quiet and selection
+   carries the agency's own accent. */
+.view-chip{border-color:#cbd5e1;background:#f4f7fb;color:#3d4a63}
+.view-chip:hover{border-color:#9fb0cc;background:#eaf0f8}
+.view-chip.is-active{background:#0d3b9e;border-color:#0d3b9e;color:#fff}
+.view-chip.is-active span{opacity:.72}
+.mdrrmo-page .view-chip.is-active{background:#b8171d;border-color:#b8171d}
+
+.view-all{
+  display:block;width:auto;margin:12px 15px 15px;padding:13px;
+  border:1px solid #c8d3e2;border-radius:12px;background:none;
+  color:#0d3b9e;font:inherit;font-weight:800;letter-spacing:.05em;
+  text-align:center;cursor:pointer;
+}
+.mdrrmo-page .view-all{color:#b8171d}
+.view-all:hover{background:#f2f6fc}
+.view-all:focus-visible{outline:3px solid #ffc700;outline-offset:2px}
+
+/* --- narrow widths ------------------------------------------------------ */
+
+/* The rail becomes a horizontal strip rather than eating a third of a tablet.
+   Operational data must stay readable; it is never collapsed into a card. */
+@media(max-width:1100px){
+  .console-shell{flex-direction:column}
+  .console-rail{
+    flex:none;flex-direction:row;overflow-x:auto;gap:4px;
+    padding:8px 10px;order:2;
+  }
+  .rail-item{flex-direction:row;gap:8px;padding:10px 13px;white-space:nowrap}
+  .rail-soon{display:none}
+  .rail-logout{margin-top:0;margin-left:auto}
+}
+@media(max-width:720px){
+  .who-text{display:none}
+  .agency-top-actions{gap:10px}
+}
