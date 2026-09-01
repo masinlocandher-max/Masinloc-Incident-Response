@@ -142,34 +142,45 @@ grant execute on function public.emergency_is_platform_admin() to authenticated;
 grant execute on function public.emergency_is_agency_member(text) to authenticated;
 grant execute on function public.emergency_can_access_incident(uuid) to authenticated;
 
+-- Policies are dropped before they are created so this file can be re-run.
+-- Without it a second apply stops at the first existing policy, and every
+-- statement after that point silently never runs — which is the state a
+-- careful operator produces by running the migration folder twice.
+drop policy if exists emergency_members_read_self on public.emergency_agency_members;
 create policy emergency_members_read_self
-on public.emergency_agency_members for select to authenticated
+  on public.emergency_agency_members for select to authenticated
 using (user_id = (select auth.uid()) or public.emergency_is_platform_admin());
 
+drop policy if exists emergency_members_admin_manage on public.emergency_agency_members;
 create policy emergency_members_admin_manage
-on public.emergency_agency_members for all to authenticated
+  on public.emergency_agency_members for all to authenticated
 using (public.emergency_is_platform_admin())
 with check (public.emergency_is_platform_admin());
 
+drop policy if exists emergency_incidents_agency_read on public.emergency_incidents;
 create policy emergency_incidents_agency_read
-on public.emergency_incidents for select to authenticated
+  on public.emergency_incidents for select to authenticated
 using (public.emergency_can_access_incident(id));
 
+drop policy if exists emergency_incidents_agency_update on public.emergency_incidents;
 create policy emergency_incidents_agency_update
-on public.emergency_incidents for update to authenticated
+  on public.emergency_incidents for update to authenticated
 using (public.emergency_can_access_incident(id))
 with check (public.emergency_can_access_incident(id));
 
+drop policy if exists emergency_incident_agencies_read on public.emergency_incident_agencies;
 create policy emergency_incident_agencies_read
-on public.emergency_incident_agencies for select to authenticated
+  on public.emergency_incident_agencies for select to authenticated
 using (public.emergency_can_access_incident(incident_id));
 
+drop policy if exists emergency_messages_agency_read on public.emergency_messages;
 create policy emergency_messages_agency_read
-on public.emergency_messages for select to authenticated
+  on public.emergency_messages for select to authenticated
 using (public.emergency_can_access_incident(incident_id));
 
+drop policy if exists emergency_messages_agency_insert on public.emergency_messages;
 create policy emergency_messages_agency_insert
-on public.emergency_messages for insert to authenticated
+  on public.emergency_messages for insert to authenticated
 with check (
   public.emergency_can_access_incident(incident_id)
   and sender_user_id = (select auth.uid())
@@ -178,8 +189,9 @@ with check (
   and public.emergency_is_agency_member(sender_agency)
 );
 
+drop policy if exists emergency_events_agency_read on public.emergency_events;
 create policy emergency_events_agency_read
-on public.emergency_events for select to authenticated
+  on public.emergency_events for select to authenticated
 using (public.emergency_can_access_incident(incident_id));
 
 revoke all on table public.emergency_agency_members from anon;

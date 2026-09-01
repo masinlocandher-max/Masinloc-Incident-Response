@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="../tokens.css?v=20260823-1">
-<link rel="stylesheet" href="emergency.css?v=20260831-3">
+<link rel="stylesheet" href="emergency.css?v=20260831-5">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to emergency form</a>
@@ -30,6 +30,22 @@
     <div><strong>Immediate danger?</strong><span>Do not wait for an online reply.</span></div>
     <a href="tel:911">Call 911</a>
   </div>
+
+  <!-- Whether a human can actually open this report.
+
+       This page used to state flatly that "the same desk receives it". No desk
+       receives anything until the municipality activates an account, so for a
+       resident in trouble that sentence was false in the most consequential
+       way a sentence on this page can be. The answer now comes from the
+       server's own roster, is rendered before the form is filled in rather
+       than after submission, and treats every state except a confirmed active
+       desk as nobody watching. -->
+  <div class="desk-state" id="deskState" role="status" hidden></div>
+
+  <!-- An account is a convenience, never a gate. This says so plainly, so
+       nobody in trouble stops to sign in first, and nobody assumes a report
+       sent without one is somehow lesser. -->
+  <div class="account-state" id="accountState" hidden></div>
 
   <!-- SECTION 1 ......................................................... -->
   <section class="agency-picker" aria-labelledby="agencyTitle">
@@ -72,7 +88,7 @@
         <span class="mode-body"><strong>ASSISTANCE</strong><small>Non-emergency concern, request or report</small></span>
       </button>
     </div>
-    <p class="mode-note" id="modeNote">Either way the same desk receives it. If you are unsure, choose Emergency.</p>
+    <p class="mode-note" id="modeNote">Both types go to the same queue. If you are unsure, choose Emergency.</p>
   </section>
 
   <section class="report-panel" id="reportPanel" hidden aria-labelledby="reportTitle">
@@ -183,6 +199,10 @@
       <div><span>Agency</span><strong id="agencyValue">—</strong></div>
       <div><span>Created</span><strong id="createdValue">—</strong></div>
       <div><span>GPS</span><strong id="gpsValue">—</strong></div>
+      <!-- Whether this report can be opened again from another device.
+           Answered by the server, because only the server knows whether
+           the session token was accepted. -->
+      <div><span>Access</span><strong id="accessValue">—</strong></div>
     </div>
 
     <div class="chat-card">
@@ -203,6 +223,6 @@
 </main>
 
 <footer><a href="../connect.html">Masinloc Connect</a><span>Emergency reporting pilot</span></footer>
-<script src="emergency.js?v=20260831-3" defer></script>
+<script src="emergency.js?v=20260831-5" defer></script>
 </body>
 </html>

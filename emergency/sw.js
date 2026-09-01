@@ -4,7 +4,7 @@
    would be served stale indefinitely, which on this page means a fix to
    delivery logic that never arrives. scripts/emergency-qa.mjs checks this
    string against the stamp index.html loads. */
-const SHELL_VERSION='20260831-3';
+const SHELL_VERSION='20260831-5';
 const CACHE=`masinloc-emergency-shell-${SHELL_VERSION}`;
 const DB_NAME='masinloc-emergency-v1';
 const DB_VERSION=1;

@@ -195,3 +195,39 @@
   .agency-card{transition:none}
   .agency-card:hover,.agency-card.selected{transform:none}
 }
+
+/* --- whether anybody is actually receiving this -------------------------
+
+   Sized and coloured as a warning, not a footnote. A person deciding whether
+   to rely on this page instead of a phone call has to be able to read this
+   before they start typing, so it sits directly under the 911 callout and is
+   not dismissible. Amber rather than red: red on this page belongs to the
+   911 action, and a second red block competing with it would weaken the one
+   thing we most want tapped. */
+.desk-state{
+  max-width:1180px;margin:0 auto;
+  padding:16px clamp(18px,4vw,20px);
+  border-left:5px solid #e06a12;background:#fff4e9;color:#5c3505;
+  border-radius:0 12px 12px 0;
+}
+.desk-state strong{display:block;font-size:16px;line-height:1.35}
+.desk-state p{margin:7px 0 0;line-height:1.55;font-size:14px}
+.desk-state a{color:#9d1820;font-weight:900}
+@media(min-width:760px){
+  .desk-state{margin-top:clamp(20px,3vw,28px)}
+}
+
+/* --- signing in is optional, and the page says so ----------------------- */
+
+/* Deliberately quieter than .desk-state. That block is a warning about
+   whether help can read this; this one is a convenience note. Ranking them
+   the same would put an account prompt at the same visual weight as "nobody
+   is receiving your report", which is the wrong thing to be reading first. */
+.account-state{
+  max-width:1180px;margin:14px auto 0;
+  padding:13px clamp(18px,4vw,20px);
+  border:1px solid #dce3ed;background:#fff;border-radius:12px;color:#44506a;
+}
+.account-state strong{display:block;font-size:14px;color:#1a2745}
+.account-state p{margin:5px 0 0;line-height:1.55;font-size:13px}
+.account-state a{color:#0d3b9e;font-weight:800}

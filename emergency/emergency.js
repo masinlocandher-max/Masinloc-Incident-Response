@@ -48,18 +48,100 @@ function setConnection(){const el=$('#connectionPill'),online=navigator.onLine;e
 function showError(msg){const e=$('#formError');e.textContent=msg;e.hidden=!msg}
 function setSending(on){$('#submitReport').disabled=on;$('#submitReport').textContent=on?'Saving report…':'Send emergency report'}
 
-function agencySelect(agency){selectedAgency=agency;document.querySelectorAll('[data-agency]').forEach(b=>{const selected=b.dataset.agency===agency;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected?'true':'false')});const select=$('#incidentType');select.innerHTML=TYPES[agency].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');$('#modePicker').hidden=false;$('#reportPanel').hidden=false;$('#modePicker').scrollIntoView({behavior:'smooth',block:'start'});captureGPS(false).catch(()=>{});}
+function agencySelect(agency){selectedAgency=agency;document.querySelectorAll('[data-agency]').forEach(b=>{const selected=b.dataset.agency===agency;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected?'true':'false')});const select=$('#incidentType');select.innerHTML=TYPES[agency].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');$('#modePicker').hidden=false;$('#reportPanel').hidden=false;$('#modePicker').scrollIntoView({behavior:'smooth',block:'start'});renderDeskState();captureGPS(false).catch(()=>{});}
 
 document.querySelectorAll('[data-agency]').forEach(b=>b.addEventListener('click',()=>agencySelect(b.dataset.agency)));
 function modeSelect(mode){reportMode=mode==='assistance'?'assistance':'emergency';document.querySelectorAll('[data-mode]').forEach(x=>{const on=x.dataset.mode===reportMode;x.classList.toggle('selected',on);x.setAttribute('aria-pressed',on?'true':'false')});
-$('#modeNote').textContent=reportMode==='assistance'?'The same desk receives this. It is not watched continuously — if the situation changes, call 911 or send an emergency report.':'Either way the same desk receives it. If you are unsure, choose Emergency.';}
+$('#modeNote').textContent=reportMode==='assistance'?'This goes to the same queue. It is not watched continuously — if the situation changes, call 911 or send an emergency report.':'Both types go to the same queue. If you are unsure, choose Emergency.';}
 document.querySelectorAll('[data-mode]').forEach(x=>x.addEventListener('click',()=>modeSelect(x.dataset.mode)));
+
+/* Is anybody actually able to open this report?
+
+   The honest answer is a fact about the server's roster, not a sentence a
+   designer chose, so it is fetched. Every state except a confirmed active
+   desk — unknown, offline, request failed, roster unreadable — renders as
+   nobody watching. Failing the other way would mean telling somebody in
+   danger that help has their report when it does not. */
+let deskStaffed=null,deskChecked=false;
+async function loadReadiness(){
+  try{const d=await api({action:'readiness'});deskStaffed=d.determined?d.staffed:null}
+  catch{deskStaffed=null}
+  deskChecked=true;renderDeskState();renderAccountState();
+}
+function renderDeskState(){
+  const el=$('#deskState');
+  if(!el||!deskChecked)return;
+  // Before a choice is made the warning speaks for both desks; after one, for
+  // the desk actually chosen.
+  const label=selectedAgency?selectedAgency.toUpperCase():'';
+  const staffed=deskStaffed
+    ?(selectedAgency?deskStaffed[selectedAgency]:(deskStaffed.pnp||deskStaffed.mdrrmo))
+    :null;
+  if(staffed===true){el.hidden=true;el.innerHTML='';return}
+  const who=label||'PNP and MDRRMO';
+  const verb=label?'has':'have';
+  el.innerHTML=staffed===false
+    ?`<strong>${esc(who)} ${verb} not activated this channel yet.</strong>`+
+     `<p>Your report is saved and time-stamped and it stays on record, but no officer can open it until the municipality activates the desk. `+
+     `<b>If this is happening now, call <a href="tel:911">911</a>.</b></p>`
+    :`<strong>We could not confirm that ${label?`the ${esc(label)} desk is`:'either desk is'} active.</strong>`+
+     `<p>Treat this report as not yet received. `+
+     `<b>If this is happening now, call <a href="tel:911">911</a>.</b></p>`;
+  el.hidden=false;
+}
+
+/* Attaching a report to an account, without putting an auth SDK on this page.
+
+   The resident sign-in on career.html leaves a Supabase session in local
+   storage; this reads the access token out of it and hands it to intake. No
+   bundle is added, which matters here more than anywhere else on the site:
+   this is the page somebody opens on a bad connection while something is
+   happening to them, and it is the page the service worker has to be able to
+   serve from cache.
+
+   Nothing here authorises anything. The token is a claim the server checks;
+   this file never trusts it. If it is missing, stale or rejected, the report
+   goes anonymously — which is a fully supported way to send one, not a
+   degraded one. Reporting an emergency must never require signing in. */
+const AUTH_KEY='sb-uwcqvsitjtknxsaypjxj-auth-token';
+function storedSession(){
+  try{
+    const raw=localStorage.getItem(AUTH_KEY);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    const s=parsed?.currentSession||parsed;
+    return s&&s.access_token?s:null;
+  }catch{return null}
+}
+function accountToken(){return storedSession()?.access_token||null}
+/* For display only. An expired session still gets sent — the server is the
+   thing that decides — but it must not be shown to the reader as signed in. */
+function accountEmail(){
+  const s=storedSession();
+  if(!s?.user?.email)return null;
+  const expiry=Number(s.expires_at||0);
+  if(expiry&&expiry*1000<=Date.now())return null;
+  return s.user.email;
+}
+function renderAccountState(){
+  const el=$('#accountState');
+  if(!el)return;
+  const email=accountEmail();
+  el.innerHTML=email
+    ?`<strong>Signed in as ${esc(email)}.</strong>`+
+     `<p>This report will be linked to your account, so you can open it again from any device.</p>`
+    :`<strong>Not signed in \u2014 that is fine.</strong>`+
+     `<p>You can report without an account. Signing in only means you can open this report again `+
+     `from another device; without one it stays readable only on this phone. `+
+     `<a href="../career.html">Sign in</a> if you want that, or carry on.</p>`;
+  el.hidden=false;
+}
 
 function geolocate(){return new Promise((resolve,reject)=>{if(!navigator.geolocation){reject(new Error('Location is not supported by this browser.'));return}navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:0})})}
 async function captureGPS(quiet=false){const card=$('#locationCard'),button=$('#locationBtn');button.disabled=true;button.textContent='Locating…';if(!quiet){$('#locationTitle').textContent='Getting your location';$('#locationMeta').textContent='Keep this page open while the phone attempts a GPS fix.'}try{const pos=await geolocate();locationFix={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy_m:pos.coords.accuracy,location_captured_at:new Date(pos.timestamp||Date.now()).toISOString()};card.classList.remove('failed');card.classList.add('captured');$('#locationTitle').textContent='Location captured';$('#locationMeta').textContent=`${locationFix.latitude.toFixed(6)}, ${locationFix.longitude.toFixed(6)} · accuracy ±${Math.round(locationFix.accuracy_m)} m`;return locationFix}catch(err){card.classList.remove('captured');card.classList.add('failed');$('#locationTitle').textContent='GPS unavailable';$('#locationMeta').textContent='Enter the barangay and nearest landmark below. You can retry GPS at any time.';throw err}finally{button.disabled=false;button.textContent='Refresh GPS'}}
 $('#locationBtn').addEventListener('click',()=>captureGPS(false).catch(()=>{}));
 
-async function api(payload){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store',signal:controller.signal});let data={};try{data=await r.json()}catch{}if(!r.ok||!data.ok)throw new Error(data.error||`Request failed (${r.status})`);return data}finally{clearTimeout(timer)}}
+async function api(payload,token){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);const head={'Content-Type':'application/json'};if(token)head.Authorization=`Bearer ${token}`;try{const r=await fetch(ENDPOINT,{method:'POST',headers:head,body:JSON.stringify(payload),cache:'no-store',signal:controller.signal});let data={};try{data=await r.json()}catch{}if(!r.ok||!data.ok)throw new Error(data.error||`Request failed (${r.status})`);return data}finally{clearTimeout(timer)}}
 
 function buildReport(){return{
   client_report_id:crypto.randomUUID(),report_secret:randomSecret(),target_agency:selectedAgency,report_mode:reportMode,incident_type:$('#incidentType').value,
@@ -102,7 +184,7 @@ const stored=await getReport(report.client_report_id);
 /* The committed state decides, not the caller's snapshot: a path that started
    before another finished would otherwise re-send a delivered report and roll
    its confirmed reference back to 'Pending delivery'. */
-if(stored&&stored.sync_state==='delivered'){if(active&&active.client_report_id===stored.client_report_id){active=stored;renderActiveMeta();renderStatus()}return stored}report.sync_state='sending';report.status='sending';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();try{const data=await api({action:'submit',report});report.sync_state='delivered';report.status=data.status||'received';report.reference=data.reference||report.reference;report.received_at=data.received_at||report.received_at;report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderActiveMeta();renderStatus();await refreshStatus(false);return report}catch(err){report.sync_state='queued';report.status='saved_offline';report.last_error=err instanceof Error?err.message:'Delivery failed';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();registerSync();return report}}finally{inFlight.delete(report.client_report_id)}}
+if(stored&&stored.sync_state==='delivered'){if(active&&active.client_report_id===stored.client_report_id){active=stored;renderActiveMeta();renderStatus()}return stored}report.sync_state='sending';report.status='sending';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();try{const data=await api({action:'submit',report},accountToken());report.sync_state='delivered';report.status=data.status||'received';report.reference=data.reference||report.reference;/* Only the server knows whether the token was accepted, so the claim that a report is linked to an account comes from its answer and never from the presence of a token here. */report.attributed=data.attributed===true;report.received_at=data.received_at||report.received_at;report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderActiveMeta();renderStatus();await refreshStatus(false);return report}catch(err){report.sync_state='queued';report.status='saved_offline';report.last_error=err instanceof Error?err.message:'Delivery failed';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();registerSync();return report}}finally{inFlight.delete(report.client_report_id)}}
 
 async function refreshStatus(showFailure=true){if(!active||active.sync_state!=='delivered'||!navigator.onLine)return;try{const data=await api({action:'status',client_report_id:active.client_report_id,report_secret:active.report_secret});const i=data.incident||{};active.status=i.status||active.status;active.reference=i.public_reference||active.reference;active.received_at=i.received_at||active.received_at;active.acknowledged_at=i.acknowledged_at||null;active.assigned_unit=i.assigned_unit||null;active.priority=i.priority||active.priority;active.resolved_at=i.resolved_at||null;active.updated_local_at=new Date().toISOString();serverMessages=data.messages||[];await putReport(active);renderActiveMeta();renderStatus();await renderMessages();}catch(err){if(showFailure)$('#messageHint').textContent='Could not refresh right now. Your saved report remains on this device.';}}
 
@@ -159,7 +241,16 @@ function renderRail(){
 }
 
 function renderStatus(){if(!active)return;const state=active.sync_state!=='delivered'?(active.status==='sending'?'sending':'saved_offline'):active.status;const copy=STATUS_COPY[state]||[state,'Status updated.'];const card=$('#statusCard');card.className=`status-card ${state}`;$('#statusLabel').textContent=copy[0];$('#statusExplanation').textContent=copy[1];renderRail();}
-function renderActiveMeta(){if(!active)return;$('#activeReportTitle').textContent=`${AGENCY_LABEL[active.target_agency]} emergency report`;$('#referenceValue').textContent=active.reference||'Pending delivery';$('#agencyValue').textContent=AGENCY_LABEL[active.target_agency];$('#createdValue').textContent=formatDate(active.source_created_at);$('#gpsValue').textContent=active.latitude!==null&&active.latitude!==undefined?`${Number(active.latitude).toFixed(5)}, ${Number(active.longitude).toFixed(5)}${active.accuracy_m?` ±${Math.round(active.accuracy_m)}m`:''}`:'Manual location';}
+function renderActiveMeta(){if(!active)return;$('#activeReportTitle').textContent=`${AGENCY_LABEL[active.target_agency]} emergency report`;$('#referenceValue').textContent=active.reference||'Pending delivery';$('#agencyValue').textContent=AGENCY_LABEL[active.target_agency];$('#createdValue').textContent=formatDate(active.source_created_at);$('#gpsValue').textContent=active.latitude!==null&&active.latitude!==undefined?`${Number(active.latitude).toFixed(5)}, ${Number(active.longitude).toFixed(5)}${active.accuracy_m?` ±${Math.round(active.accuracy_m)}m`:''}`:'Manual location';
+/* Said plainly, because the consequence is not obvious: a report that is not
+   attached to an account can be opened only from this browser. Somebody who
+   loses this phone, or clears its data, loses their own copy of a report the
+   responders can still read. That is worth knowing before it happens, and it
+   is only claimed when the server confirmed the account was attached. */
+const access=$('#accessValue');
+if(access){access.textContent=active.sync_state!=='delivered'?'Not sent yet'
+  :active.attributed?'Linked to your account — open it from any device'
+  :'This device only — sent without an account'}}
 async function renderMessages(){const local=(await getMessages(active.client_report_id)).filter(m=>m.sync_state!=='delivered');const combined=[...serverMessages.map(m=>({...m,local:false})),...local.map(m=>({...m,local:true}))].sort((a,b)=>new Date(a.created_at||a.source_created_at).getTime()-new Date(b.created_at||b.source_created_at).getTime());const box=$('#messages');if(!combined.length){box.innerHTML='<div class="message system">No responder messages yet.<small>Updates will appear here after delivery.</small></div>';return}box.innerHTML=combined.map(m=>{const kind=m.sender_kind==='resident'?'resident':m.sender_kind==='system'?'system':'agency';const who=kind==='resident'?'You':kind==='system'?'System':String(m.sender_agency||m.sender_kind||'Responder').toUpperCase();return `<div class="message ${kind}"><strong>${esc(who)}</strong><div>${esc(m.body)}</div><small>${m.local?'Queued · not yet received':formatDate(m.created_at)}</small></div>`}).join('');box.scrollTop=box.scrollHeight;}
 
 async function showActive(){if(!active)return;$('#agencyTitle').closest('.agency-picker').hidden=true;$('#reportPanel').hidden=true;$('#activeReport').hidden=false;renderActiveMeta();renderStatus();await renderMessages();$('#activeReport').scrollIntoView({behavior:'smooth',block:'start'});startPolling();}
@@ -178,8 +269,11 @@ async function runFlush(){setConnection();if(!navigator.onLine)return;const repo
 
 async function registerSync(){if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;if('sync'in reg)await reg.sync.register('masinloc-emergency-sync')}catch{}}
 
-window.addEventListener('online',()=>flushAll());window.addEventListener('offline',setConnection);window.addEventListener('focus',()=>flushAll());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')flushAll()});
+window.addEventListener('online',()=>{flushAll();loadReadiness()});window.addEventListener('offline',setConnection);window.addEventListener('focus',()=>flushAll());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')flushAll()});
 
 async function boot(){setConnection();if('serviceWorker'in navigator){try{await navigator.serviceWorker.register('sw.js',{scope:'./'})}catch{}}const reports=await getReports();if(reports.length){reports.sort((a,b)=>new Date(b.source_created_at).getTime()-new Date(a.source_created_at).getTime());active=reports[0];if(active.sync_state==='delivered' || active.sync_state==='queued' || active.sync_state==='sending'){serverMessages=[];await showActive();}}await flushAll();}
 boot().catch(()=>setConnection());
+// Asked once on load and again on reconnect. Never cached across sessions: a
+// desk that was staffed yesterday is not evidence that one is staffed now.
+loadReadiness();renderAccountState();
 })();
