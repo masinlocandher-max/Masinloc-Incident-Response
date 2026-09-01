@@ -1,0 +1,152 @@
+name: Sync current emergency source safely
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-current-emergency-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_REPO: masinlocandher-max/Masinloc-Website
+  SOURCE_COMMIT: f811ad170e17f6743800c6f9e3f50e8c6cdbefe6
+  TARGET_BRANCH: migration/extract-emergency-system
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out incident-response migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+
+      - name: Check out exact website source snapshot
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          ref: ${{ env.SOURCE_COMMIT }}
+          path: upstream
+
+      - name: Refuse mixed source
+        run: |
+          actual=$(git -C upstream rev-parse HEAD)
+          test "$actual" = "$SOURCE_COMMIT"
+
+      - name: Archive production-history-only SQL before executable sync
+        run: |
+          mkdir -p migration/production-history
+          for f in \
+            supabase/migrations/20260901014758_emergency_member_activation.sql \
+            supabase/migrations/20260901014821_emergency_reporter_account.sql
+          do
+            if [ -f "$f" ]; then
+              cp "$f" "migration/production-history/$(basename "$f")"
+            fi
+          done
+
+      - name: Replace emergency subsystem with exact source snapshot
+        run: |
+          rm -rf emergency
+          cp -a upstream/emergency ./emergency
+
+          mkdir -p assets/vendor supabase/functions supabase/migrations scripts
+          cp upstream/tokens.css tokens.css
+          cp upstream/connect.html connect.html
+          cp upstream/assets/vendor/supabase.js assets/vendor/supabase.js
+          cp upstream/assets/favicon.svg assets/favicon.svg
+          cp upstream/assets/apple-touch-icon.png assets/apple-touch-icon.png
+          cp upstream/assets/masinloc-logo.webp assets/masinloc-logo.webp
+
+          rm -rf supabase/functions/emergency-response
+          cp -a upstream/supabase/functions/emergency-response supabase/functions/emergency-response
+
+          rm -f supabase/migrations/*emergency*.sql
+          cp upstream/supabase/migrations/*emergency*.sql supabase/migrations/
+
+          cp upstream/scripts/emergency-qa.mjs scripts/emergency-qa.mjs
+          cp upstream/scripts/emergency-browser-qa.mjs scripts/emergency-browser-qa.mjs
+          cp upstream/scripts/check-emergency-consolidation.py scripts/check-emergency-consolidation.py
+          cp upstream/scripts/check-migrations-apply.py scripts/check-migrations-apply.py
+
+      - name: Rebuild exact upstream blob lock
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, subprocess
+
+          root = pathlib.Path('.')
+          upstream = root / 'upstream'
+          paths = []
+          paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'emergency').glob('*')) if p.is_file()]
+          paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'supabase/functions/emergency-response').rglob('*')) if p.is_file()]
+          paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'supabase/migrations').glob('*emergency*.sql'))]
+          paths += [
+            'scripts/emergency-qa.mjs',
+            'scripts/emergency-browser-qa.mjs',
+            'scripts/check-emergency-consolidation.py',
+            'scripts/check-migrations-apply.py',
+            'tokens.css',
+            'connect.html',
+            'assets/vendor/supabase.js',
+            'assets/favicon.svg',
+            'assets/apple-touch-icon.png',
+            'assets/masinloc-logo.webp',
+          ]
+          paths = sorted(dict.fromkeys(paths))
+
+          def git_blob_sha(data: bytes) -> str:
+            return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+
+          files = []
+          for rel in paths:
+            src = upstream / rel
+            if not src.is_file():
+              raise SystemExit(f'missing locked source file: {rel}')
+            files.append({
+              'source_path': rel,
+              'target_path': rel,
+              'blob_sha': git_blob_sha(src.read_bytes()),
+              'required': True,
+            })
+
+          tree = subprocess.check_output(['git','-C','upstream','rev-parse','HEAD^{tree}'], text=True).strip()
+          lock = {
+            'source_repository': 'masinlocandher-max/Masinloc-Website',
+            'source_commit': 'f811ad170e17f6743800c6f9e3f50e8c6cdbefe6',
+            'source_tree': tree,
+            'files': files,
+          }
+          pathlib.Path('migration/upstream-blobs.json').write_text(json.dumps(lock, indent=2) + '\n')
+          print(f'Locked {len(files)} exact source files from tree {tree}.')
+          PY
+
+      - name: Verify exact byte parity
+        run: node scripts/verify-upstream-parity.mjs
+
+      - name: Run emergency static and security QA
+        run: |
+          node --check emergency/emergency.js
+          node --check emergency/sw.js
+          node --check emergency/agency.js
+          node scripts/emergency-qa.mjs
+          python3 scripts/check-emergency-consolidation.py
+
+      - name: Remove temporary upstream checkout
+        run: rm -rf upstream
+
+      - name: Commit only after every gate passes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add emergency tokens.css connect.html assets supabase/functions/emergency-response supabase/migrations scripts/emergency-qa.mjs scripts/emergency-browser-qa.mjs scripts/check-emergency-consolidation.py scripts/check-migrations-apply.py migration/upstream-blobs.json migration/production-history
+          if git diff --cached --quiet; then
+            echo 'No source changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Sync emergency subsystem to f811ad1 source checkpoint'
+          git push origin HEAD:${TARGET_BRANCH}
