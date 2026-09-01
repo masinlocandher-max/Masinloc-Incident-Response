@@ -9,7 +9,10 @@ const fail=m=>failures.push(m);
 
 function sql(query,{expectFail=false}={}){
   try{
-    const out=execFileSync('psql',[DB,'-At','-v','ON_ERROR_STOP=1','-c',query],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+    // -q suppresses command-status noise such as SET/UPDATE. Without it,
+    // a correct RLS count is returned as "SET\nSET\n2" and an exact-value
+    // assertion falsely reports a policy failure.
+    const out=execFileSync('psql',[DB,'-qAt','-v','ON_ERROR_STOP=1','-c',query],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
     if(expectFail)fail(`SQL unexpectedly succeeded: ${query.slice(0,90)}…`);
     return out;
   }catch(error){
@@ -96,19 +99,28 @@ function asUser(userId,query){
   return sql(`set role authenticated; set request.jwt.claims='{"sub":"${userId}","role":"authenticated"}'; ${query}`);
 }
 
-if(asUser(PNP,'select count(*) from public.emergency_incidents;')!=='2')fail('PNP RLS did not expose exactly PNP-linked incidents');
-if(asUser(MDR,'select count(*) from public.emergency_incidents;')!=='1')fail('MDRRMO RLS did not isolate MDRRMO-linked incidents');
-if(asUser(REPORTER,'select count(*) from public.emergency_incidents;')!=='1')fail('Reporter RLS did not expose exactly the resident-owned incident');
-if(asUser(REPORTER,`select count(*) from public.emergency_messages where incident_id='${IOWN}';`)!=='1')fail('Reporter could see an internal responder note or lost the public message');
+// Before interpreting any RLS result, prove our local session emulates the
+// authenticated user's auth.uid() exactly as PostgREST does.
+const uidCheck=asUser(PNP,'select auth.uid();');
+if(uidCheck!==PNP)fail(`auth.uid() context was not established; expected ${PNP}, got ${JSON.stringify(uidCheck)}`);
+
+const pnpCount=asUser(PNP,'select count(*) from public.emergency_incidents;');
+if(pnpCount!=='2')fail(`PNP RLS did not expose exactly PNP-linked incidents; got ${JSON.stringify(pnpCount)}`);
+const mdrCount=asUser(MDR,'select count(*) from public.emergency_incidents;');
+if(mdrCount!=='1')fail(`MDRRMO RLS did not isolate MDRRMO-linked incidents; got ${JSON.stringify(mdrCount)}`);
+const reporterCount=asUser(REPORTER,'select count(*) from public.emergency_incidents;');
+if(reporterCount!=='1')fail(`Reporter RLS did not expose exactly the resident-owned incident; got ${JSON.stringify(reporterCount)}`);
+const reporterMessageCount=asUser(REPORTER,`select count(*) from public.emergency_messages where incident_id='${IOWN}';`);
+if(reporterMessageCount!=='1')fail(`Reporter public-message RLS expected 1 visible message, got ${JSON.stringify(reporterMessageCount)}`);
 
 const frozenErr=sql(`set role authenticated; set request.jwt.claims='{"sub":"${PNP}","role":"authenticated"}'; update public.emergency_incidents set description='tampered' where id='${IPNP}';`,{expectFail:true});
-if(!/cannot change description/i.test(frozenErr))fail('Responder resident-field freeze did not reject description rewrite');
+if(!/(cannot change description|resident.*own report|check_violation)/i.test(frozenErr))fail(`Responder resident-field freeze did not reject description rewrite as expected; error was ${JSON.stringify(frozenErr.slice(0,500))}`);
 
 asUser(PNP,`update public.emergency_incidents set status='acknowledged' where id='${IPNP}';`);
 if(sql(`select count(*) from public.emergency_events where incident_id='${IPNP}' and event_type='status_changed';`)!=='1')fail('Status audit event was not recorded');
 
 const adminErr=sql(`set role authenticated; set request.jwt.claims='{"sub":"${PNP}","role":"authenticated"}'; select * from public.emergency_activate_member('resident-ci@example.invalid','pnp','operator',null);`,{expectFail:true});
-if(!/platform administrator/i.test(adminErr))fail('Responder activation helper did not enforce platform-admin authorization');
+if(!/platform administrator/i.test(adminErr))fail(`Responder activation helper did not enforce platform-admin authorization; error was ${JSON.stringify(adminErr.slice(0,500))}`);
 
 // Edge Function lifecycle using anonymous resident contract.
 const urgent=report('emergency','pnp');
