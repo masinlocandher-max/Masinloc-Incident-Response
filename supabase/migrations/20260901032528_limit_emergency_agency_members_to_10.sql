@@ -5,6 +5,8 @@
 -- This is enforced in the database rather than only in the onboarding UI so
 -- direct writes and concurrent activation requests cannot bypass the limit.
 
+create schema if not exists private;
+
 create or replace function private.emergency_enforce_agency_member_limit()
 returns trigger
 language plpgsql
