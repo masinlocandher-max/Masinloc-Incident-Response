@@ -19,18 +19,29 @@ let match = 0;
 
 console.log(`Pinned upstream: ${lock.source_repository}@${lock.source_commit}`);
 for (const entry of lock.files.filter(file => file.required)) {
+  // Older locks used `sha`; the repository-side lock generator uses the more
+  // explicit `blob_sha`. Supporting both lets us rotate source checkpoints
+  // without weakening the byte-for-byte comparison.
+  const expected = entry.sha || entry.blob_sha;
+  if (!expected) {
+    mismatch += 1;
+    console.log(`MISMATCH ${entry.target_path}`);
+    console.log('         expected hash missing from lock entry');
+    continue;
+  }
+
   const localPath = path.join(root, entry.target_path);
   if (!fs.existsSync(localPath)) {
     missing += 1;
-    console.log(`MISSING  ${entry.target_path}  expected ${entry.sha}`);
+    console.log(`MISSING  ${entry.target_path}  expected ${expected}`);
     continue;
   }
 
   const actual = gitBlobSha(fs.readFileSync(localPath));
-  if (actual !== entry.sha) {
+  if (actual !== expected) {
     mismatch += 1;
     console.log(`MISMATCH ${entry.target_path}`);
-    console.log(`         expected ${entry.sha}`);
+    console.log(`         expected ${expected}`);
     console.log(`         actual   ${actual}`);
     continue;
   }
