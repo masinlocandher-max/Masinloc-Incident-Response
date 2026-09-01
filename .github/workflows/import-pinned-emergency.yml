@@ -1,0 +1,59 @@
+name: Import pinned emergency source
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/extract-emergency-system
+    paths:
+      - .github/workflows/import-pinned-emergency.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out incident-response branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/extract-emergency-system
+          fetch-depth: 0
+
+      - name: Check out pinned production source
+        uses: actions/checkout@v4
+        with:
+          repository: masinlocandher-max/Masinloc-Website
+          ref: 4e74f25e59123aed6e09afc924162de983421052
+          path: .upstream
+          persist-credentials: false
+
+      - name: Import exact pinned files
+        run: node scripts/import-pinned-upstream.mjs --source .upstream
+
+      - name: Verify byte-for-byte upstream parity
+        run: node scripts/verify-upstream-parity.mjs
+
+      - name: Run emergency static QA
+        run: node scripts/emergency-qa.mjs
+
+      - name: Run emergency consolidation security check
+        run: python3 scripts/check-emergency-consolidation.py
+
+      - name: Remove temporary upstream checkout
+        run: rm -rf .upstream
+
+      - name: Commit exact migration files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add emergency assets tokens.css connect.html scripts/emergency-qa.mjs scripts/emergency-browser-qa.mjs scripts/check-emergency-consolidation.py supabase/functions/emergency-response/index.ts supabase/migrations
+          if git diff --cached --quiet; then
+            echo "Pinned files already match; nothing to commit."
+            exit 0
+          fi
+          git commit -m "Import exact pinned emergency subsystem"
+          git push origin HEAD:migration/extract-emergency-system
