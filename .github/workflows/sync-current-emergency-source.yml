@@ -12,7 +12,7 @@ permissions:
 
 env:
   SOURCE_REPO: masinlocandher-max/Masinloc-Website
-  SOURCE_COMMIT: f811ad170e17f6743800c6f9e3f50e8c6cdbefe6
+  SOURCE_COMMIT: 185c144ad5f12415d5276059741978078d22263f
   TARGET_BRANCH: migration/extract-emergency-system
 
 jobs:
@@ -63,8 +63,8 @@ jobs:
           cp upstream/assets/apple-touch-icon.png assets/apple-touch-icon.png
           cp upstream/assets/masinloc-logo.webp assets/masinloc-logo.webp
 
-          rm -rf supabase/functions/emergency-response
-          cp -a upstream/supabase/functions/emergency-response supabase/functions/emergency-response
+          rm -rf supabase/functions/emergency-*
+          cp -a upstream/supabase/functions/emergency-* supabase/functions/
 
           rm -f supabase/migrations/*emergency*.sql
           cp upstream/supabase/migrations/*emergency*.sql supabase/migrations/
@@ -83,7 +83,9 @@ jobs:
           upstream = root / 'upstream'
           paths = []
           paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'emergency').glob('*')) if p.is_file()]
-          paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'supabase/functions/emergency-response').rglob('*')) if p.is_file()]
+          for function_dir in sorted((upstream/'supabase/functions').glob('emergency-*')):
+            if function_dir.is_dir():
+              paths += [str(p.relative_to(upstream)) for p in sorted(function_dir.rglob('*')) if p.is_file()]
           paths += [str(p.relative_to(upstream)) for p in sorted((upstream/'supabase/migrations').glob('*emergency*.sql'))]
           paths += [
             'scripts/emergency-qa.mjs',
@@ -110,14 +112,14 @@ jobs:
             files.append({
               'source_path': rel,
               'target_path': rel,
-              'blob_sha': git_blob_sha(src.read_bytes()),
+              'sha': git_blob_sha(src.read_bytes()),
               'required': True,
             })
 
           tree = subprocess.check_output(['git','-C','upstream','rev-parse','HEAD^{tree}'], text=True).strip()
           lock = {
             'source_repository': 'masinlocandher-max/Masinloc-Website',
-            'source_commit': 'f811ad170e17f6743800c6f9e3f50e8c6cdbefe6',
+            'source_commit': '185c144ad5f12415d5276059741978078d22263f',
             'source_tree': tree,
             'files': files,
           }
@@ -143,10 +145,10 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add emergency tokens.css connect.html assets supabase/functions/emergency-response supabase/migrations scripts/emergency-qa.mjs scripts/emergency-browser-qa.mjs scripts/check-emergency-consolidation.py scripts/check-migrations-apply.py migration/upstream-blobs.json migration/production-history
+          git add emergency tokens.css connect.html assets supabase/functions supabase/migrations scripts/emergency-qa.mjs scripts/emergency-browser-qa.mjs scripts/check-emergency-consolidation.py scripts/check-migrations-apply.py migration/upstream-blobs.json migration/production-history
           if git diff --cached --quiet; then
             echo 'No source changes to commit.'
             exit 0
           fi
-          git commit -m 'Sync emergency subsystem to f811ad1 source checkpoint'
+          git commit -m 'Sync emergency subsystem to 185c144 source checkpoint'
           git push origin HEAD:${TARGET_BRANCH}
