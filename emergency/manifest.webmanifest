@@ -1,0 +1,13 @@
+{
+  "name": "Masinloc Emergency Help",
+  "short_name": "Emergency Help",
+  "description": "Offline-capable emergency reporting for PNP and MDRRMO through Masinloc Connect.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#03112F",
+  "icons": [
+    {"src":"../assets/apple-touch-icon.png","sizes":"180x180","type":"image/png","purpose":"any"}
+  ]
+}
