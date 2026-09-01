@@ -1,0 +1,35 @@
+{
+  "source_repository": "masinlocandher-max/Masinloc-Website",
+  "source_commit": "4e74f25e59123aed6e09afc924162de983421052",
+  "source_tree": "0042fc2fe5122c971ed9e64919ba269b043f1662",
+  "policy": "A required target file must exist and its Git blob SHA-1 must exactly match this pinned source before cutover.",
+  "files": [
+    {"source_path":"emergency/agency.css","target_path":"emergency/agency.css","sha":"ac17d6a0a3a4d3047c213a2e6f63a62ba9541952","required":true,"category":"responder-ui","state":"pending_exact_copy"},
+    {"source_path":"emergency/agency.js","target_path":"emergency/agency.js","sha":"d3a160aa375148d9d41e840125fde2f9a79752ba","required":true,"category":"responder-runtime","state":"pending_exact_copy"},
+    {"source_path":"emergency/emergency.css","target_path":"emergency/emergency.css","sha":"a068501d2b92268f2cf86e7a9dd2f3bc30899632","required":true,"category":"resident-ui","state":"pending_exact_copy"},
+    {"source_path":"emergency/emergency.js","target_path":"emergency/emergency.js","sha":"d0fbfe7942399102c87cecc77f19acfce3126c19","required":true,"category":"resident-runtime","state":"pending_exact_copy"},
+    {"source_path":"emergency/index.html","target_path":"emergency/index.html","sha":"5efa9ab591cc6de0789c5eed583c8051ae9a8e77","required":true,"category":"resident-ui","state":"copied_exact"},
+    {"source_path":"emergency/manifest.webmanifest","target_path":"emergency/manifest.webmanifest","sha":"25cac90621a597f883e640dff1364dee52ae3f59","required":true,"category":"pwa","state":"copied_exact"},
+    {"source_path":"emergency/map.js","target_path":"emergency/map.js","sha":"6d0d3f50b6349d3f630fb824809c873c657159e3","required":true,"category":"responder-map","state":"pending_exact_copy"},
+    {"source_path":"emergency/mdrrmo.html","target_path":"emergency/mdrrmo.html","sha":"cf5da67b3cb9099b95ef46ac58f4cae83db39378","required":true,"category":"responder-ui","state":"pending_exact_copy"},
+    {"source_path":"emergency/pnp.html","target_path":"emergency/pnp.html","sha":"19741f500d1b5a08323abddd61c57af08bbd5d28","required":true,"category":"responder-ui","state":"pending_exact_copy"},
+    {"source_path":"emergency/sw.js","target_path":"emergency/sw.js","sha":"2495819229303ae351247ffb775439e5992c5538","required":true,"category":"pwa","state":"pending_exact_copy"},
+
+    {"source_path":"supabase/functions/emergency-response/index.ts","target_path":"supabase/functions/emergency-response/index.ts","sha":"766b071a1948b988a9de97531a0625466f1d4f4c","required":true,"category":"backend","state":"copied_exact"},
+    {"source_path":"supabase/migrations/20260831143000_emergency_response_core.sql","target_path":"supabase/migrations/20260831143000_emergency_response_core.sql","sha":"11af6cfd648c5389e43d321e4359c228a6b609e1","required":true,"category":"database","state":"copied_exact"},
+    {"source_path":"supabase/migrations/20260831152000_emergency_response_hardening.sql","target_path":"supabase/migrations/20260831152000_emergency_response_hardening.sql","sha":"3b759282752a816af65730510f04aae6697bbdbc","required":true,"category":"database-security","state":"copied_exact"},
+    {"source_path":"supabase/migrations/20260831160000_emergency_report_mode_and_resident_immutability.sql","target_path":"supabase/migrations/20260831160000_emergency_report_mode_and_resident_immutability.sql","sha":"096312a10fd93ae5943f8c253ae30b3e28e17441","required":true,"category":"database-security","state":"copied_exact"},
+    {"source_path":"supabase/migrations/20260901023745_revoke_emergency_trigger_rpc_execution.sql","target_path":"supabase/migrations/20260901023745_revoke_emergency_trigger_rpc_execution.sql","sha":"2e2f7892b4c093be08216eb1a33b7ca1a5f733d1","required":true,"category":"database-security","state":"copied_exact"},
+
+    {"source_path":"scripts/check-emergency-consolidation.py","target_path":"scripts/check-emergency-consolidation.py","sha":"dabca4484a3a1d9968f6034c48b0999bf3c242bd","required":true,"category":"qa-security","state":"pending_exact_copy"},
+    {"source_path":"scripts/emergency-browser-qa.mjs","target_path":"scripts/emergency-browser-qa.mjs","sha":"d8fb615351a81d5c6d3d3fd04c2aa3c5e908615a","required":true,"category":"qa-browser","state":"pending_exact_copy"},
+    {"source_path":"scripts/emergency-qa.mjs","target_path":"scripts/emergency-qa.mjs","sha":"07d2d73f5e881ac84b83153edaa25e9c0a1dd109","required":true,"category":"qa-static","state":"pending_exact_copy"},
+
+    {"source_path":"tokens.css","target_path":"tokens.css","sha":"eb51f4b0e359a2cad31ab04371d212af16565e5d","required":true,"category":"shared-style","state":"pending_exact_copy"},
+    {"source_path":"assets/vendor/supabase.js","target_path":"assets/vendor/supabase.js","sha":"22eafa097638c6bd7469ad724fe552ecc2851561","required":true,"category":"shared-runtime","state":"pending_exact_copy"},
+    {"source_path":"assets/favicon.svg","target_path":"assets/favicon.svg","sha":"a4f7a702840c3327fadbdebed68b711cf552ffc3","required":true,"category":"shared-asset","state":"pending_exact_copy"},
+    {"source_path":"assets/apple-touch-icon.png","target_path":"assets/apple-touch-icon.png","sha":"7defd00807c9ec8213e70423433def139d5721cd","required":true,"category":"shared-binary","state":"pending_exact_copy"},
+    {"source_path":"assets/masinloc-logo.webp","target_path":"assets/masinloc-logo.webp","sha":"5174bb11be15bbdd680a3ded86a72a21c32e13fa","required":true,"category":"shared-binary","state":"pending_exact_copy"},
+    {"source_path":"connect.html","target_path":"connect.html","sha":"4ef52c138e0e7056243f0aa6c0a09de4a3f9e112","required":true,"category":"navigation-dependency","state":"pending_exact_copy"}
+  ]
+}
