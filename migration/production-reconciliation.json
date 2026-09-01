@@ -1,0 +1,74 @@
+{
+  "checked_at_utc": "2026-09-01T03:00:00Z",
+  "production_project_ref": "uwcqvsitjtknxsaypjxj",
+  "production_write_performed": false,
+  "emergency_migrations": [
+    {
+      "production_version": "20260831065300",
+      "production_name": "emergency_response_core",
+      "repo_path": "supabase/migrations/20260831143000_emergency_response_core.sql",
+      "status": "present_in_repo"
+    },
+    {
+      "production_version": "20260831071020",
+      "production_name": "emergency_response_hardening",
+      "repo_path": "supabase/migrations/20260831152000_emergency_response_hardening.sql",
+      "status": "present_in_repo"
+    },
+    {
+      "production_version": "20260901014733",
+      "production_name": "emergency_report_mode_and_resident_immutability",
+      "repo_path": "supabase/migrations/20260831160000_emergency_report_mode_and_resident_immutability.sql",
+      "status": "present_in_repo_filename_differs_from_live_history"
+    },
+    {
+      "production_version": "20260901014758",
+      "production_name": "emergency_member_activation",
+      "repo_path": "supabase/migrations/20260901014758_emergency_member_activation.sql",
+      "production_content_md5": "8509bef91c41d82edcec7f314c5a22b8",
+      "git_blob_sha": "ae466d6820e5372b8ecdef2694d5ce4e20b1b7d0",
+      "status": "recovered_exactly_from_production_history"
+    },
+    {
+      "production_version": "20260901014821",
+      "production_name": "emergency_reporter_account",
+      "repo_path": "supabase/migrations/20260901014821_emergency_reporter_account.sql",
+      "production_content_md5": "24e73f4f5f12e62b8aa80fc4867e1b95",
+      "git_blob_sha": "f8dd70d193e1de09a73d850eaa9e000b7a165bdf",
+      "status": "recovered_exactly_from_production_history"
+    },
+    {
+      "production_version": "20260901023745",
+      "production_name": "revoke_emergency_trigger_rpc_execution",
+      "repo_path": "supabase/migrations/20260901023745_revoke_emergency_trigger_rpc_execution.sql",
+      "status": "present_in_repo"
+    }
+  ],
+  "edge_function": {
+    "slug": "emergency-response",
+    "production_version": 3,
+    "production_verify_jwt": false,
+    "production_ezbr_sha256": "7a82a5a19818be306646dbdc95adc53e4360af00b9d0962ab48c9f84dc58a85b",
+    "repo_path": "supabase/functions/emergency-response/index.ts",
+    "repo_git_blob_sha": "766b071a1948b988a9de97531a0625466f1d4f4c",
+    "status": "production_older_than_repo",
+    "known_drift": [
+      "Production submit path does not persist report_mode; database default can classify Assistance as emergency.",
+      "Production function does not yet implement the optional reporter_user_id account-linking path represented by the live database migration."
+    ]
+  },
+  "security_observations": {
+    "trigger_only_functions_revoked_from_anon": true,
+    "trigger_only_functions_revoked_from_authenticated": true,
+    "trigger_only_functions_executable_by_service_role": true,
+    "reporter_rls_policies_present": true,
+    "production_incident_rows_read": false
+  },
+  "cutover_blocked": true,
+  "blockers": [
+    "Test the recovered migration history on an isolated Supabase environment.",
+    "Test the corrected repo Edge Function against that isolated database.",
+    "Resolve or deliberately defer the optional reporter-account runtime wiring.",
+    "Only after isolated tests pass, perform a controlled production Edge Function deployment with rollback prepared."
+  ]
+}
