@@ -59,7 +59,10 @@ select json_build_object(
   'reporter_policy', exists(select 1 from pg_policies where schemaname='public' and tablename='emergency_incidents' and policyname='emergency_incidents_reporter_read'),
   'trigger_anon_blocked', not has_function_privilege('anon','public.emergency_freeze_resident_fields()','EXECUTE'),
   'trigger_auth_blocked', not has_function_privilege('authenticated','public.emergency_freeze_resident_fields()','EXECUTE'),
-  'trigger_service_allowed', has_function_privilege('service_role','public.emergency_freeze_resident_fields()','EXECUTE')
+  'trigger_service_allowed', has_function_privilege('service_role','public.emergency_freeze_resident_fields()','EXECUTE'),
+  'status_update_allowed', has_column_privilege('authenticated','public.emergency_incidents','status','UPDATE'),
+  'description_update_blocked', not has_column_privilege('authenticated','public.emergency_incidents','description','UPDATE'),
+  'reporter_user_update_blocked', not has_column_privilege('authenticated','public.emergency_incidents','reporter_user_id','UPDATE')
 )::text;`);
 const inv=JSON.parse(migrationChecks);
 for(const [k,v] of Object.entries(inv))if(v!==true)fail(`schema invariant failed: ${k}`);
@@ -113,8 +116,13 @@ if(reporterCount!=='1')fail(`Reporter RLS did not expose exactly the resident-ow
 const reporterMessageCount=asUser(REPORTER,`select count(*) from public.emergency_messages where incident_id='${IOWN}';`);
 if(reporterMessageCount!=='1')fail(`Reporter public-message RLS expected 1 visible message, got ${JSON.stringify(reporterMessageCount)}`);
 
+// The hardening migration intentionally grants responders UPDATE only on
+// operational columns. A resident-authored field may therefore be stopped by
+// column privilege before the freeze trigger runs. Either mechanism is a valid
+// denial; the invariant above separately proves description/reporter_user_id
+// are not update-granted while status is.
 const frozenErr=sql(`set role authenticated; set request.jwt.claims='{"sub":"${PNP}","role":"authenticated"}'; update public.emergency_incidents set description='tampered' where id='${IPNP}';`,{expectFail:true});
-if(!/(cannot change description|resident.*own report|check_violation)/i.test(frozenErr))fail(`Responder resident-field freeze did not reject description rewrite as expected; error was ${JSON.stringify(frozenErr.slice(0,500))}`);
+if(!/(permission denied for table emergency_incidents|cannot change description|resident.*own report|check_violation)/i.test(frozenErr))fail(`Responder resident-field rewrite was not denied as expected; error was ${JSON.stringify(frozenErr.slice(0,500))}`);
 
 asUser(PNP,`update public.emergency_incidents set status='acknowledged' where id='${IPNP}';`);
 if(sql(`select count(*) from public.emergency_events where incident_id='${IPNP}' and event_type='status_changed';`)!=='1')fail('Status audit event was not recorded');
