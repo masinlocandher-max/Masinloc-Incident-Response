@@ -1,0 +1,80 @@
+name: Emergency browser parity
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/emergency-browser-parity.yml
+
+permissions:
+  contents: read
+
+jobs:
+  emergency-browser-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out incident-response migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/extract-emergency-system
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify pinned source parity
+        run: node scripts/verify-upstream-parity.mjs
+
+      - name: JavaScript syntax
+        run: |
+          node --check emergency/emergency.js
+          node --check emergency/sw.js
+          node --check emergency/agency.js
+          node --check emergency/map.js
+
+      - name: Emergency contract checks
+        run: node scripts/emergency-qa.mjs
+
+      - name: Emergency consolidation security check
+        run: python3 scripts/check-emergency-consolidation.py
+
+      - name: Install pinned Playwright
+        run: |
+          npm install --no-save playwright@1.55.0 @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated static server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/incident-response-server.log 2>&1 &
+          echo $! > /tmp/incident-response-server.pid
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/emergency/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/incident-response-server.log
+          exit 1
+
+      - name: Browser QA run 1
+        run: node scripts/emergency-browser-qa.mjs
+
+      - name: Browser QA run 2
+        run: node scripts/emergency-browser-qa.mjs
+
+      - name: Browser QA run 3
+        run: node scripts/emergency-browser-qa.mjs
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emergency-browser-parity
+          path: artifacts/browser-qa/*.png
+          if-no-files-found: warn
+          retention-days: 7
