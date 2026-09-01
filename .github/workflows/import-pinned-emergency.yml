@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - migration/extract-emergency-system
+      - main
     paths:
       - .github/workflows/import-pinned-emergency.yml
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out incident-response branch
+      - name: Check out incident-response migration branch
         uses: actions/checkout@v4
         with:
           ref: migration/extract-emergency-system
