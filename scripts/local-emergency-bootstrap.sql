@@ -1,6 +1,9 @@
--- Local CI only. The production project already owns this shared rate limiter.
--- The incident-response repo does not duplicate it as a production migration;
--- this bootstrap gives the isolated local Edge Function the same RPC contract.
+-- Local CI only. The production project already owns this shared platform baseline.
+-- The incident-response repo does not duplicate these as production migrations;
+-- this bootstrap gives an isolated blank Supabase stack the same shared
+-- dependencies that already exist in the full production project.
+
+create schema if not exists private;
 
 create table if not exists public.submission_rate_limits (
   fingerprint text primary key,
