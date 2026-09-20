@@ -4,12 +4,12 @@
    would be served stale indefinitely, which on this page means a fix to
    delivery logic that never arrives. scripts/emergency-qa.mjs checks this
    string against the stamp index.html loads. */
-const SHELL_VERSION='20260831-5';
+const SHELL_VERSION='20260920-1';
 const CACHE=`masinloc-emergency-shell-${SHELL_VERSION}`;
 const DB_NAME='masinloc-emergency-v1';
 const DB_VERSION=1;
 const ENDPOINT='https://uwcqvsitjtknxsaypjxj.supabase.co/functions/v1/emergency-response';
-const SHELL=['./','./index.html',`./emergency.css?v=${SHELL_VERSION}`,`./emergency.js?v=${SHELL_VERSION}`,'./manifest.webmanifest','../tokens.css?v=20260823-1','../assets/masinloc-logo.webp','../assets/favicon.svg','../assets/apple-touch-icon.png'];
+const SHELL=['./','./index.html',`./emergency.css?v=${SHELL_VERSION}`,`./relay.js?v=${SHELL_VERSION}`,`./emergency.js?v=${SHELL_VERSION}`,'./manifest.webmanifest','../tokens.css?v=20260823-1','../assets/masinloc-logo.webp','../assets/favicon.svg','../assets/apple-touch-icon.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('masinloc-emergency-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

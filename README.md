@@ -21,3 +21,13 @@ Canonical extraction source during the migration:
 - Database: emergency-specific migrations under `supabase/migrations/`
 
 No service-role keys, passwords, private responder credentials, or other secrets belong in this repository.
+
+## Offline relay foundation
+
+A native store-and-forward relay foundation is under development in `feature/offline-relay-v1`.
+
+- The existing browser PWA continues to save reports offline and retry HTTPS delivery.
+- `emergency/relay.js` provides a narrow bridge for a trusted native iOS/Android host to accept an offline report into an encrypted peer relay.
+- Relay acceptance never counts as server receipt. The resident UI remains **Not Yet Received** until the backend confirms delivery.
+- The protocol, privacy requirements, threat model, and production test gates are documented in `docs/RELAY_PROTOCOL_V1.md`.
+- True phone-to-phone transport is a native-app capability and is not claimed by the standalone browser PWA.

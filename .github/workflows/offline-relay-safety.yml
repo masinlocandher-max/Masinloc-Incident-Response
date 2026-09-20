@@ -1,0 +1,64 @@
+name: Offline relay safety
+
+on:
+  pull_request:
+    paths:
+      - emergency/relay.js
+      - emergency/emergency.js
+      - emergency/index.html
+      - emergency/sw.js
+      - scripts/relay-qa.mjs
+      - scripts/emergency-qa.mjs
+      - scripts/emergency-browser-qa.mjs
+      - docs/RELAY_PROTOCOL_V1.md
+      - .github/workflows/offline-relay-safety.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  relay-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out proposed changes
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: JavaScript syntax
+        run: |
+          node --check emergency/relay.js
+          node --check emergency/emergency.js
+          node --check emergency/sw.js
+
+      - name: Relay safety invariants
+        run: node scripts/relay-qa.mjs
+
+      - name: Existing emergency contract checks
+        run: node scripts/emergency-qa.mjs
+
+      - name: Install pinned Playwright
+        run: |
+          npm install --no-save playwright@1.55.0 @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated static server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/relay-server.log 2>&1 &
+          echo $! > /tmp/relay-server.pid
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/emergency/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/relay-server.log
+          exit 1
+
+      - name: Existing emergency browser QA
+        run: node scripts/emergency-browser-qa.mjs
