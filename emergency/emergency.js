@@ -34,6 +34,22 @@ function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(D
 async function tx(store,mode,work){const db=await openDB();return new Promise((resolve,reject)=>{const t=db.transaction(store,mode),s=t.objectStore(store);let value;try{value=work(s)}catch(e){db.close();reject(e);return}t.oncomplete=()=>{db.close();resolve(value)};t.onerror=()=>{db.close();reject(t.error)};})}
 async function putReport(r){await tx('reports','readwrite',s=>s.put(r))}
 async function putMessage(m){await tx('messages','readwrite',s=>s.put(m))}
+async function offerRelay(report){
+  if(!report||report.sync_state==='delivered'||report.relay_state==='queued_to_native')return report;
+  const relay=globalThis.MasinlocRelay;
+  if(!relay?.offerReport)return report;
+  const result=await relay.offerReport(report);
+  if(result?.accepted){
+    report.relay_state='queued_to_native';
+    report.relay_packet_id=result.packet_id||null;
+    report.relay_transport=result.transport||null;
+    report.relay_queued_at=result.queued_at||new Date().toISOString();
+    report.updated_local_at=new Date().toISOString();
+    await putReport(report);
+    if(active?.client_report_id===report.client_report_id){active=report;renderStatus();}
+  }
+  return report;
+}
 // One report by key. Used to re-read a report's committed state immediately
 // before sending, so a caller holding a stale snapshot cannot re-deliver
 // something another pass already confirmed.
@@ -153,7 +169,7 @@ function buildReport(){return{
 
 function validateForm(){if(!selectedAgency)return 'Choose PNP or MDRRMO.';if(!$('#incidentType').value)return 'Choose an incident type.';if($('#description').value.trim().length<3)return 'Describe what is happening.';if(!locationFix&&!$('#barangay').value.trim()&&!$('#landmark').value.trim())return 'Allow GPS or enter a barangay / landmark so responders know where help is needed.';return ''}
 
-$('#reportForm').addEventListener('submit',async e=>{e.preventDefault();showError('');const error=validateForm();if(error){showError(error);return}setSending(true);try{try{await captureGPS(true)}catch{}const recheck=validateForm();if(recheck){showError(recheck);return}const report=buildReport();await putReport(report);active=report;serverMessages=[];await showActive();if(navigator.onLine)await flushReport(active);else registerSync();}catch(err){showError(err instanceof Error?err.message:'Could not save the report on this device.')}finally{setSending(false)}});
+$('#reportForm').addEventListener('submit',async e=>{e.preventDefault();showError('');const error=validateForm();if(error){showError(error);return}setSending(true);try{try{await captureGPS(true)}catch{}const recheck=validateForm();if(recheck){showError(recheck);return}const report=buildReport();await putReport(report);active=report;serverMessages=[];await showActive();if(navigator.onLine){await flushReport(active);if(active?.sync_state!=='delivered')await offerRelay(active);}else{await offerRelay(active);registerSync();}}catch(err){showError(err instanceof Error?err.message:'Could not save the report on this device.')}finally{setSending(false)}});
 
 /* Delivery is single-flight, per report and overall.
 
@@ -184,7 +200,7 @@ const stored=await getReport(report.client_report_id);
 /* The committed state decides, not the caller's snapshot: a path that started
    before another finished would otherwise re-send a delivered report and roll
    its confirmed reference back to 'Pending delivery'. */
-if(stored&&stored.sync_state==='delivered'){if(active&&active.client_report_id===stored.client_report_id){active=stored;renderActiveMeta();renderStatus()}return stored}report.sync_state='sending';report.status='sending';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();try{const data=await api({action:'submit',report},accountToken());report.sync_state='delivered';report.status=data.status||'received';report.reference=data.reference||report.reference;/* Only the server knows whether the token was accepted, so the claim that a report is linked to an account comes from its answer and never from the presence of a token here. */report.attributed=data.attributed===true;report.received_at=data.received_at||report.received_at;report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderActiveMeta();renderStatus();await refreshStatus(false);return report}catch(err){report.sync_state='queued';report.status='saved_offline';report.last_error=err instanceof Error?err.message:'Delivery failed';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();registerSync();return report}}finally{inFlight.delete(report.client_report_id)}}
+if(stored&&stored.sync_state==='delivered'){if(active&&active.client_report_id===stored.client_report_id){active=stored;renderActiveMeta();renderStatus()}return stored}report.sync_state='sending';report.status='sending';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();try{const data=await api({action:'submit',report},accountToken());report.sync_state='delivered';report.status=data.status||'received';report.reference=data.reference||report.reference;/* Only the server knows whether the token was accepted, so the claim that a report is linked to an account comes from its answer and never from the presence of a token here. */report.attributed=data.attributed===true;report.received_at=data.received_at||report.received_at;report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderActiveMeta();renderStatus();await globalThis.MasinlocRelay?.markDelivered?.(report.client_report_id);await refreshStatus(false);return report}catch(err){report.sync_state='queued';report.status='saved_offline';report.last_error=err instanceof Error?err.message:'Delivery failed';report.updated_local_at=new Date().toISOString();await putReport(report);active=report;renderStatus();registerSync();return report}}finally{inFlight.delete(report.client_report_id)}}
 
 async function refreshStatus(showFailure=true){if(!active||active.sync_state!=='delivered'||!navigator.onLine)return;try{const data=await api({action:'status',client_report_id:active.client_report_id,report_secret:active.report_secret});const i=data.incident||{};active.status=i.status||active.status;active.reference=i.public_reference||active.reference;active.received_at=i.received_at||active.received_at;active.acknowledged_at=i.acknowledged_at||null;active.assigned_unit=i.assigned_unit||null;active.priority=i.priority||active.priority;active.resolved_at=i.resolved_at||null;active.updated_local_at=new Date().toISOString();serverMessages=data.messages||[];await putReport(active);renderActiveMeta();renderStatus();await renderMessages();}catch(err){if(showFailure)$('#messageHint').textContent='Could not refresh right now. Your saved report remains on this device.';}}
 
@@ -240,7 +256,7 @@ function renderRail(){
     `<span class="rail-what">${esc(what)}</span></span></li>`).join('');
 }
 
-function renderStatus(){if(!active)return;const state=active.sync_state!=='delivered'?(active.status==='sending'?'sending':'saved_offline'):active.status;const copy=STATUS_COPY[state]||[state,'Status updated.'];const card=$('#statusCard');card.className=`status-card ${state}`;$('#statusLabel').textContent=copy[0];$('#statusExplanation').textContent=copy[1];renderRail();}
+function renderStatus(){if(!active)return;const state=active.sync_state!=='delivered'?(active.status==='sending'?'sending':'saved_offline'):active.status;let copy=STATUS_COPY[state]||[state,'Status updated.'];if(state==='saved_offline'&&active.relay_state==='queued_to_native')copy=['Saved Offline · Relay Queued · Not Yet Received','A native relay copy is queued for store-and-forward. PNP/MDRRMO has not received it yet.'];const card=$('#statusCard');card.className=`status-card ${state}`;$('#statusLabel').textContent=copy[0];$('#statusExplanation').textContent=copy[1];renderRail();}
 function renderActiveMeta(){if(!active)return;$('#activeReportTitle').textContent=`${AGENCY_LABEL[active.target_agency]} emergency report`;$('#referenceValue').textContent=active.reference||'Pending delivery';$('#agencyValue').textContent=AGENCY_LABEL[active.target_agency];$('#createdValue').textContent=formatDate(active.source_created_at);$('#gpsValue').textContent=active.latitude!==null&&active.latitude!==undefined?`${Number(active.latitude).toFixed(5)}, ${Number(active.longitude).toFixed(5)}${active.accuracy_m?` ±${Math.round(active.accuracy_m)}m`:''}`:'Manual location';
 /* Said plainly, because the consequence is not obvious: a report that is not
    attached to an account can be opened only from this browser. Somebody who
@@ -265,7 +281,7 @@ async function flushMessage(m){if(!navigator.onLine||!active||active.sync_state!
 
 let flushing=null;
 function flushAll(){/* Overlapping callers share one pass rather than starting their own. */if(flushing)return flushing;flushing=runFlush().finally(()=>{flushing=null});return flushing}
-async function runFlush(){setConnection();if(!navigator.onLine)return;const reports=(await getReports()).sort((a,b)=>new Date(a.source_created_at).getTime()-new Date(b.source_created_at).getTime());for(const r of reports.filter(x=>x.sync_state!=='delivered'))await flushReport(r);for(const r of reports.filter(x=>x.sync_state==='delivered')){const msgs=await getMessages(r.client_report_id);for(const m of msgs.filter(x=>x.sync_state!=='delivered')){const previous=active;active=r;await flushMessage(m);active=previous;}}if(active&&active.sync_state==='delivered')await refreshStatus(false)}
+async function runFlush(){setConnection();const reports=(await getReports()).sort((a,b)=>new Date(a.source_created_at).getTime()-new Date(b.source_created_at).getTime());if(!navigator.onLine){for(const r of reports.filter(x=>x.sync_state!=='delivered'))await offerRelay(r);return}for(const r of reports.filter(x=>x.sync_state!=='delivered')){await flushReport(r);if(r.sync_state!=='delivered')await offerRelay(r);}for(const r of reports.filter(x=>x.sync_state==='delivered')){const msgs=await getMessages(r.client_report_id);for(const m of msgs.filter(x=>x.sync_state!=='delivered')){const previous=active;active=r;await flushMessage(m);active=previous;}}if(active&&active.sync_state==='delivered')await refreshStatus(false)}
 
 async function registerSync(){if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;if('sync'in reg)await reg.sync.register('masinloc-emergency-sync')}catch{}}
 
